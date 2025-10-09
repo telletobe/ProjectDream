@@ -4,6 +4,7 @@
 #include "UMG/ProjectDreamHUD.h"
 #include "UserInventory.h"
 #include "UMG/Achievement/AchievementListWidget.h"
+DEFINE_LOG_CATEGORY(LogHUD);
 
 AProjectDreamHUD::AProjectDreamHUD()
 {
@@ -14,41 +15,23 @@ void AProjectDreamHUD::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (InventoryWidgetClass)
+	if (Widgets.Num() == 0) return;
+
+	APlayerController* PC = GetWorld()->GetFirstPlayerController();
+
+	if (!PC) return;
+	
+	
+
+	for (const TSubclassOf<UUserWidget>& WidgetClass : Widgets)
 	{
-		InventoryWidget = CreateWidget<UUserInventory>(GetWorld(), InventoryWidgetClass);
-		if (InventoryWidget)
-		{
-			InventoryWidget->AddToViewport();
-			InventoryWidget->SetVisibility(ESlateVisibility::Hidden);
-			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::MakeRandomColor(), TEXT("InventoryInit"));
-			UE_LOG(LogTemp, Warning, TEXT("InventoryInit"));
-		}
-		else
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::MakeRandomColor(), TEXT("InventoryInit Fail"));
-			UE_LOG(LogTemp, Warning, TEXT("Inventory Fail"));
-		}
+		if (!WidgetClass) continue;
 		
+		UE_LOG(LogHUD, Warning, TEXT("Call BeginPlay"));
+
+		UUserWidget* NewWidget = CreateWidget<UUserWidget>(PC,WidgetClass);		
+		NewWidget->AddToViewport();
+		NewWidget->SetVisibility(ESlateVisibility::Hidden);
 	}
-
-	if (AchievementWidgetClass)
-	{
-		AchievementWidget = CreateWidget<UAchievementListWidget>(GetWorld(), AchievementWidgetClass);
-		if (AchievementWidget)
-		{
-			AchievementWidget->AddToViewport();
-			AchievementWidget->SetVisibility(ESlateVisibility::Hidden);
-			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::MakeRandomColor(), TEXT("Achievement Init"));
-			UE_LOG(LogTemp,Warning,TEXT("Achieve UI"));
-		}
-		else
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::MakeRandomColor(), TEXT("Achievement Fail"));
-			UE_LOG(LogTemp, Warning, TEXT("Achieve UI Fail"));
-		}
-	}
-
-
-
+	
 }

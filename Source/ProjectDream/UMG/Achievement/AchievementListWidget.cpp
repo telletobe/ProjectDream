@@ -129,5 +129,4 @@ void UAchievementListWidget::UpdateAchieveEntry(FName EventId)
 			}
 		}
 	}
-
 }

@@ -73,7 +73,6 @@ namespace SaveJson
 		return true;
 	}
 
-
 	template<typename ElemStruct>
 	inline bool ArrayToJsonString(const TArray<ElemStruct>& InArray, FString& OutJson, bool bPretty /*= true*/)
 	{

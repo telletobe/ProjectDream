@@ -6,12 +6,10 @@
 #include "GameFramework/HUD.h"
 #include "ProjectDreamHUD.generated.h"
 
-/**
- * 
- */
-
 class UUserInventory;
 class UAchievementListWidget;
+
+DECLARE_LOG_CATEGORY_EXTERN(LogHUD, Log, All);
 
 UCLASS()
 class PROJECTDREAM_API AProjectDreamHUD : public AHUD
@@ -24,17 +22,6 @@ public :
 
 private:
 
-	UPROPERTY(EditAnywhere, Category ="UMG")
-	TSubclassOf<UUserInventory> InventoryWidgetClass;
-
-	UPROPERTY()
-	TObjectPtr<UUserInventory> InventoryWidget;
-
 	UPROPERTY(EditAnywhere, Category = "UMG")
-	TSubclassOf< UAchievementListWidget> AchievementWidgetClass;
-
-	UPROPERTY()
-	TObjectPtr<UAchievementListWidget> AchievementWidget;
-
-
+	TArray<TSubclassOf<UUserWidget>> Widgets;
 };

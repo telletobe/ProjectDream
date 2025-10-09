@@ -39,12 +39,10 @@ public:
 		return Manager ? Manager->IsUnlocked(Id) : false;
 	}
 
-
 	int32 GetProgress(FName Id) const
 	{
 		return Manager ? Manager->GetProgress(Id) : 0;
 	}
-
 
 	UAchievementsManager* GetManager() const { return Manager; }
 
