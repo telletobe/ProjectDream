@@ -2,91 +2,23 @@
 
 
 #include "GameSystems/Inventory/GameInventory.h"
-#include "GameItem.h"
-#include "ProjectDreamCharacter.h"
-#include "../DreamGameInstance.h"
-#include "../DreamGameInstanceSubsystem.h"
+#include "DreamGameInventorySubsystem.h"
 #include "../Save/JsonSaveGame.h"
+#include "ProjectDreamCharacter.h"
 
-bool FGameItemData::operator==(const FGameItemData& Other) const
-{
-	return ItemCategory == Other.ItemCategory && ItemID == Other.ItemID && UniqueID == Other.UniqueID;
-			
-}
+TObjectPtr<UGameInventory> UGameInventory::Instance = nullptr;
 
-bool FGameItemData::operator!=(const FGameItemData& Other) const
+bool UGameInventory::Init(int32 InvSize) 
 {
-	return !(*this == Other);
-}
+	InventoryData.Init(FDreamGameItemInstance(), InvSize);
 
-FGameItemData& FGameItemData::SetItemCategory(ECategory Category)
-{
-	ItemCategory = Category;
-	return *this;
-}
-
-FGameItemData& FGameItemData::SetItemID(int32 ID)
-{
-	ItemID = ID;
-	return *this;
-}
-
-FGameItemData& FGameItemData::SetItemName(FString Name)
-{
-	ItemName = Name;
-	return *this;
-}
-
-FGameItemData& FGameItemData::SetItemDescription(FString Description)
-{
-	ItemDescription = Description;
-	return *this;
-}
-
-FGameItemData& FGameItemData::SetCanEquipment(bool CanEquipment)
-{
-	bCanEquipment = CanEquipment;
-	return *this;
-}
-
-FGameItemData& FGameItemData::SetUseQuickSlot(bool UseQuickSlot)
-{
-	bUseQuickSlot = UseQuickSlot;
-	return *this;
-}
-
-FGameItemData& FGameItemData::SetItemWeight(float Weight)
-{
-	ItemWeight = Weight;
-	return *this;
-}
-
-FGameItemData& FGameItemData::SetItemQty(int Qty)
-{
-	ItemQty = Qty;
-	return *this;
-}
-
-bool FGameItemData::MakeUniqueID()
-{
-	if (ItemCategory == ECategory::Equipment)
+	if (InventoryData.Num() <= 0)
 	{
-		UniqueID = FGuid::NewGuid();
-		return true;
+		return false;
 	}
 	else
 	{
-		UE_LOG(LogTemp,Warning,TEXT("not used UniqueID"));
-	}
-	return false;
-}
-
-void FGameItemData::PrintUID() const
-{
-	if (UniqueID.IsValid())
-	{
-		FString GUidStr = UniqueID.ToString();
-		UE_LOG(LogTemp,Warning,TEXT("Item UID : %s"), *GUidStr);
+		return true;
 	}
 }
 
@@ -99,7 +31,7 @@ bool UGameInventory::SaveInventoryData()
 	return true;
 }
 
-bool UGameInventory::SetInventoryData(TArray<FGameItemData> LoadData)
+bool UGameInventory::SetInventoryData(TArray<FDreamGameItemInstance> LoadData)
 {
 	if (LoadData.IsEmpty())
 	{
@@ -117,146 +49,158 @@ UGameInventory::UGameInventory()
 {
 }
 
-void UGameInventory::InitInventory(int32 Size)
+int32 UGameInventory::FindEmptySlotIndex()
 {
-	Size = FMath::Max(0, Size);
-	if (Size >= 50)
+	int32 FindEmptyIdx = INDEX_NONE;
+
+	if (InventoryData.Num() <= 0)
 	{
-		Size = 50;
+		UE_LOG(LogTemp,Warning,TEXT("인벤토리 초기화돼지 않음"));
+		return INDEX_NONE;
 	}
 
-	InventoryData.SetNum(Size);
+	for (int32 i = 0; i < InventoryData.Num(); i++)
+	{
+		if (InventoryData[i].GetItemID() == INVALID_ITEM_ID)
+		{
+			FindEmptyIdx = i;
+			UE_LOG(LogTemp, Warning, TEXT("빈칸 찾음"));
+			return FindEmptyIdx;
+		}
+	}
+	
+	return INDEX_NONE;
 }
 
-void UGameInventory::ItemDrop(int32 TargetIndex)
+//void UGameInventory::ItemDrop(int32 TargetIndex)
+//{
+//	if (TargetIndex <= INDEX_NONE) return;
+//	//if (!InventoryData.IsValidIndex(TargetIndex)) return;
+//
+//	//InventoryData.RemoveAt(TargetIndex);
+//	////ChangeInventoryDataWithIndex.Broadcast(TargetIndex);
+//
+//	//if (SaveInventoryData())
+//	//{
+//	//	UE_LOG(LogTemp, Warning, TEXT("GameInstance valid"));
+//	//}
+//	//else
+//	//{
+//	//	UE_LOG(LogTemp, Warning, TEXT("GameInstance Invalid"));
+//	//}
+//}
+
+UGameInventory* UGameInventory::Get()
 {
-	if (TargetIndex <= INDEX_NONE) return;
-	if (!InventoryData.IsValidIndex(TargetIndex)) return;
-
-	InventoryData.RemoveAt(TargetIndex);
-	ChangeInventoryDataWithIndex.Broadcast(TargetIndex);
-
-	if (SaveInventoryData())
+	if (Instance)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("GameInstance valid"));
+		return Instance;
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("GameInstance Invalid"));
+		Instance = NewObject<UGameInventory>();
+		Instance->AddToRoot();
 	}
+	return Instance;
 }
 
-void UGameInventory::AddToQty(int32 ItemIndex, int32 ItemQty)
-{
-	if (!InventoryData.IsValidIndex(ItemIndex)) return;
-	InventoryData[ItemIndex].ItemQty += ItemQty;
-	ChangeInventoryDataWithIndex.Broadcast(ItemIndex);
-}
+//bool UGameInventory::CreateItemDataToUIWithDrop(const FDreamGameItemDef& DropData)
+//{
+//	//if (!Player.IsValid())  return false;
+//
+//	//UWorld* World = Player->GetWorld();
+//	//if (!World) return false;
+//
+//	//FVector SpawnLocation = Player->GetActorLocation() + Player->GetActorForwardVector() * 50.0f;
+//	//FRotator SpawnRotator = Player->GetActorRotation();
+//
+//	//FActorSpawnParameters Params;
+//	//Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+//
+//	//AGameItem* DropItem = World->SpawnActor<AGameItem>(
+//	//	AGameItem::StaticClass(),
+//	//	SpawnLocation,
+//	//	SpawnRotator,
+//	//	Params);
+//
+//	//if (DropItem)
+//	//{
+//	//	DropItem->SetItemData(DropData);
+//	//}
+//
+//	return true;
+//}
 
-void UGameInventory::MinusToQty(int32 ItemIndex, int32 ItemQty)
+bool UGameInventory::AddToInventory(TPair<int32, EItemCategory> NewItmeKeyPair, UWorld* CurrentWorld)
 {
-	if (!InventoryData.IsValidIndex(ItemIndex)) return;
-	InventoryData[ItemIndex].ItemQty -= ItemQty;
-
-	if (InventoryData[ItemIndex].ItemQty == 0)
+	if (CurrentWorld)
 	{
-		ItemDrop(ItemIndex);
+		if (UGameInstance* GI = CurrentWorld->GetGameInstance())
+		{
+			if (const UDreamGameInventorySubsystem* InvSubSys = GI->GetSubsystem<UDreamGameInventorySubsystem>())
+			{
+				const FDreamGameItemDef* ItemDef = InvSubSys->GetItemDefByKey(NewItmeKeyPair.Key, NewItmeKeyPair.Value);
+				if (!ItemDef) 
+				{
+					UE_LOG(LogTemp, Warning, TEXT("아이템의 정의가 없음"));
+					return false;
+				}
+				FDreamGameItemInstance NewItem(NewItmeKeyPair.Key, NewItmeKeyPair.Value);
+				NewItem.MakeUniqueID();
+				UE_LOG(LogTemp,Warning,TEXT("획득한 아이템 아이디 : %d"),ItemDef->GetItemID());
+
+				// 인벤토리에 같은 아이템이 있는지 검색
+				if (InventoryData.Find(NewItem) != INDEX_NONE)
+				{
+					const int32 FindItemIdx = InventoryData.Find(NewItem);					
+					// 아이템이 최대로 쌓엿을 경우 아이템 분할
+					if ((InventoryData[FindItemIdx].GetItemStackCnt() + NewItem.GetItemStackCnt()) > ItemDef->GetMaxStackCnt())
+					{
+						const int32 RemainingStackCnt = ItemDef->GetMaxStackCnt();
+						const int32 ToMoveStackCnt = InventoryData[FindItemIdx].GetItemStackCnt() - RemainingStackCnt;
+						// 기존에 할당되어있는 인벤토리 공간중 빈 곳을 순회해서 찾음.
+						int32 EmptySlot = FindEmptySlotIndex();
+						InventoryData[EmptySlot] = NewItem;
+						InventoryData[EmptySlot].SetItemStackCnt(ToMoveStackCnt);
+						ChangeInventoryData.Broadcast();
+						return true;
+					}
+					InventoryData[FindItemIdx].AddItemStack(NewItem.GetItemStackCnt());
+					ChangeInventoryData.Broadcast();
+					return true;
+				}
+				// 인벤토리에 같은 아이템이 없는경우
+				else
+				{
+					UE_LOG(LogTemp, Warning, TEXT("새로운 아이템 획득"));
+					const int32 EmptySlot = FindEmptySlotIndex();
+
+					if (EmptySlot > InventoryData.Num() || EmptySlot == INDEX_NONE)
+					{
+						UE_LOG(LogTemp, Warning, TEXT("인벤토리 공간없음"));
+						return false;
+					}
+
+					InventoryData[EmptySlot] = NewItem;
+					ChangeInventoryData.Broadcast();
+					return true;
+				}
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("서브시스템 정보 누락"));
+				return false;
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("인스턴스 정보 누락"));
+			return false;
+		}
 	}
 	else
 	{
-		ChangeInventoryDataWithIndex.Broadcast(ItemIndex);
-	}
-}
-
-void UGameInventory::SetOwner(AProjectDreamCharacter* P)
-{
-	if (P)
-	{
-		Player = P;
-	}
-}
-
-bool UGameInventory::CreateItemDataToUIWithDrop(const FGameItemData& DropData)
-{
-	if (!Player.IsValid())  return false;
-
-	UWorld* World = Player->GetWorld();
-	if (!World) return false;
-
-	FVector SpawnLocation = Player->GetActorLocation() + Player->GetActorForwardVector() * 50.0f;
-	FRotator SpawnRotator = Player->GetActorRotation();
-
-	FActorSpawnParameters Params;
-	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-	AGameItem* DropItem = World->SpawnActor<AGameItem>(
-		AGameItem::StaticClass(),
-		SpawnLocation,
-		SpawnRotator,
-		Params);
-
-	if (DropItem)
-	{
-		DropItem->SetItemData(DropData);
-	}
-
-	return true;
-}
-
-bool UGameInventory::AddToInventory(const FGameItemData& ItemData)
-{
-	if (!ItemData.IsValid())
-	{
-		UE_LOG(LogTemp,Warning,TEXT("Invalid ItemData"));
+		UE_LOG(LogTemp, Warning, TEXT("월드 정보 누락"));
 		return false;
 	}
-	ItemData.PrintUID();
-	FGameItemData Data;
-
-	// 같은 아이템이 있다면 아이템 데이터의 갯수만 증가후 배열에 추가하지않음.
-	if (InventoryData.Contains(ItemData))
-	{
-		int32 Index = InventoryData.Find(ItemData);
-		AddToQty(Index, ItemData.ItemQty);
-		UE_LOG(LogTemp,Warning,TEXT("Contains Item"));
-
-		if (SaveInventoryData())
-		{		
-			UE_LOG(LogTemp, Warning, TEXT("Item Save Succeded"));
-		} else
-		{
-			UE_LOG(LogTemp,Warning,TEXT("Item Save  Failed"));
-		}
-		return true;
-	}
-
-	Data.SetItemName(ItemData.ItemName)
-		.SetItemCategory(ItemData.ItemCategory)
-		.SetItemID(ItemData.ItemID)
-		.SetItemDescription(TEXT("Item"))
-		.SetUseQuickSlot(false)
-		.SetItemWeight(ItemData.ItemWeight)
-		.SetItemQty(ItemData.ItemQty);
-
-	int32 NewIndex = InventoryData.Add(Data);
-	if (InventoryData[NewIndex].IsValid())
-	{
-		InventoryData[NewIndex].ItemIndex = NewIndex;
-	}
-
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::MakeRandomColor(), TEXT("Get Item!"));
-	UE_LOG(LogTemp,Warning,TEXT("Get Item!"));
-
-	ChangeInventoryData.Broadcast(); // call UserInventory.cpp UpdateInventoryUI()
-
-	if (SaveInventoryData())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Item Save Succeded"));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Item Save  Failed"));
-	}
-
-	return true;
 }

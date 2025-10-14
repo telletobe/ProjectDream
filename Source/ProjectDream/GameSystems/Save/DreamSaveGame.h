@@ -19,8 +19,8 @@ struct FInventorySave
 public:
 	FInventorySave() {};
 
-	UPROPERTY(SaveGame)
-	TArray<FGameItemData> SaveData;
+	//UPROPERTY(SaveGame)
+	//TArray<FDreamGameItemDef> SaveData;
 
 	// 세이브 시 필요한 파일들 추가
 };

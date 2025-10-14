@@ -53,12 +53,6 @@ void UAchievementEntryWidget::SyncFromItem()
 	}
 }
 
-void UAchievementEntryWidget::SetViewData(FAchievementViewData ViewData)
-{
-	Item = ViewData;
-	SyncFromItem();
-}
-
 
 void UAchievementEntryWidget::UpdateProgress()
 {

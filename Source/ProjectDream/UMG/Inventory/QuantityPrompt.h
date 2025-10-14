@@ -36,5 +36,5 @@ private:
 	UFUNCTION()
 	void OnClickCancle();
 
-	TWeakObjectPtr<class UUserInventorySlot> SlotData;
+	//TWeakObjectPtr<class UUserInventorySlot> SlotData;
 };

@@ -13,8 +13,6 @@
 #include "ProjectDreamPlayerController.h"
 #include "../GameSystems/Inventory/GameInventory.h"
 #include "../GameSystems/Inventory/GameItem.h"
-#include "GameSystems/DreamGameInstance.h"
-#include "GameSystems/DreamGameInstanceSubsystem.h"
 #include "GameSystems/Achievements/AchievementsSubsystem.h"
 #include "GameSystems/Achievements/AchievementsManager.h"
 #include "GameSystems/Common/GameEventBus/GameEventBus.h"
@@ -76,47 +74,6 @@ void AProjectDreamCharacter::BeginPlay()
 		PC->SetIgnoreLookInput(true);
 		PC->SetInputMode(InputMode);
 	}
-
-	if (!ItemInventory)
-	{
-		ItemInventory = NewObject<UGameInventory>(this, UGameInventory::StaticClass());
-		if (ItemInventory)
-		{
-			ItemInventory->SetOwner(this);
-			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::MakeRandomColor(), TEXT("Inventory Create"));
-			UE_LOG(LogTemplateCharacter,Warning,TEXT("Inventory Create"));
-			OnReadyInventory.Broadcast(ItemInventory);
-			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::MakeRandomColor(), TEXT("Inventory BroadCast"));
-		}
-	}
-
-	//if (UDreamGameInstance* GI = Cast<UDreamGameInstance>(GetGameInstance()))
-	//{
-	//	if (UDreamGameInstanceSubsystem* SaveSys = GI->GetSubsystem<UDreamGameInstanceSubsystem>())
-	//	{
-	//		SaveSys->LoadInventoryJson(TEXT("TestSave"));
-	//		UE_LOG(LogTemp, Warning, TEXT("GameInstance Valid"));
-	//	}
-	//}
-
-	if (UGameInstance* GI = GetGameInstance())
-	{
-		if (UAchievementsSubsystem* AchieveSubSystem = GI->GetSubsystem<UAchievementsSubsystem>())
-		{
-			if (UGameEventBus* EventBus = GI->GetSubsystem<UGameEventBus>())
-			{
-
-				EventBus->Publish(FName(TEXT("GAME_START")));
-				EventBus->Publish(FName(TEXT("START_TEST")));
-				UE_LOG(LogTemp, Warning, TEXT("GAME_START Achieve BroadCast Call"));
-			}
-		}	
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("GameInstance inValid"));
-	}
-
 }
 
 void AProjectDreamCharacter::SetInteractTarger(AGameItem* Target)
@@ -190,16 +147,12 @@ void AProjectDreamCharacter::OnInteract(const FInputActionValue& Value)
 {
 	if (Focused)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::MakeRandomColor(), TEXT("OnInteractAction Event"));
-		UE_LOG(LogTemp, Warning, TEXT("OnInteractAction Event"));
 		OnInteractAction.Broadcast(this);
 		if (UGameInstance* GI = GetGameInstance())
 		{
 			if (UGameEventBus* EventBus = GI->GetSubsystem<UGameEventBus>())
 			{
-
-				EventBus->Publish(FName(TEXT("TEST_ACHIEVEMENT")));
-				UE_LOG(LogTemp, Warning, TEXT("TEST_ACHIEVEMENT Achieve BroadCast Call"));
+				//EventBus->Publish(FName(TEXT("TEST_ACHIEVEMENT")));
 			}
 		}
 	}

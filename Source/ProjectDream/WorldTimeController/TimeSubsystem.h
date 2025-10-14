@@ -4,12 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
-#include "TimeSubsystemManager.generated.h"
+#include "TimeSubsystem.generated.h"
 
 class UWorldTimeController;
 
 UCLASS()
-class PROJECTDREAM_API UTimeSubsystemManager : public UGameInstanceSubsystem, public FTickableGameObject
+class PROJECTDREAM_API UTimeSubsystem : public UGameInstanceSubsystem, public FTickableGameObject
 {
 	GENERATED_BODY()
 	

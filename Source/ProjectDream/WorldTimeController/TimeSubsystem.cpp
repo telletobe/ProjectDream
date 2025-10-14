@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "WorldTimeController/TimeSubsystemManager.h"
+#include "WorldTimeController/TimeSubsystem.h"
 #include "WorldTimeController.h"
 
-void UTimeSubsystemManager::Initialize(FSubsystemCollectionBase& Collection)
+void UTimeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	UGameInstanceSubsystem::Initialize(Collection);
 	GameTimer = UWorldTimeController::GetInstance();
@@ -12,18 +12,18 @@ void UTimeSubsystemManager::Initialize(FSubsystemCollectionBase& Collection)
 
 }
 
-void UTimeSubsystemManager::Deinitialize()
+void UTimeSubsystem::Deinitialize()
 {
 	UE_LOG(LogTemp, Warning, TEXT("ShtuDown TimeSubSystemManager!"));
 	UGameInstanceSubsystem::Deinitialize();
 }
 
 
-void UTimeSubsystemManager::Tick(float DeltaTime)
+void UTimeSubsystem::Tick(float DeltaTime)
 {
 }
 
-void UTimeSubsystemManager::StartWorldTime(UWorld* World)
+void UTimeSubsystem::StartWorldTime(UWorld* World)
 {
 	
 	if (!GameTimer || !World) return;

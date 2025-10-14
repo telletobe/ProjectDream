@@ -24,7 +24,7 @@ public:
 protected:
 
 private:
-	class UTimeSubsystemManager* WorldTimerManager;
+	class UTimeSubsystem* WorldTimerManager;
 	class UWorldTimeController* WorldTime;
 };
 

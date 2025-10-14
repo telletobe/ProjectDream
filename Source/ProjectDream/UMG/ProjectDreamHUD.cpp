@@ -2,7 +2,7 @@
 
 
 #include "UMG/ProjectDreamHUD.h"
-#include "UserInventory.h"
+#include "UMG/Inventory/UserInventory.h"
 #include "UMG/Achievement/AchievementListWidget.h"
 DEFINE_LOG_CATEGORY(LogHUD);
 
@@ -20,8 +20,6 @@ void AProjectDreamHUD::BeginPlay()
 	APlayerController* PC = GetWorld()->GetFirstPlayerController();
 
 	if (!PC) return;
-	
-	
 
 	for (const TSubclassOf<UUserWidget>& WidgetClass : Widgets)
 	{

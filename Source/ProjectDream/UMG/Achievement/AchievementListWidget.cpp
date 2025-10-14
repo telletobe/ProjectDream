@@ -125,7 +125,7 @@ void UAchievementListWidget::UpdateAchieveEntry(FName EventId)
 		{
 			if (auto* Entry = Cast<UAchievementEntryWidget>(Row))
 			{
-				Entry->SetViewData(View);
+				Entry->SyncFromItem();
 			}
 		}
 	}

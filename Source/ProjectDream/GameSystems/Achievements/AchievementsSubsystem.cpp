@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
+#include "GameSystems/Achievements/AchievementsSubsystem.h"
 #include "AchievementsManager.h"
 #include "DreamAchievements.h"
-#include "GameSystems/Achievements/AchievementsSubsystem.h"
 #include <Kismet/GameplayStatics.h>
 #include "../Save/JsonSaveGame.h"
 #include <GameSystems/Save/DreamSaveGame.h>
@@ -17,17 +17,6 @@ void UAchievementsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 	Manager = NewObject<UAchievementsManager>(this);
 	check(Manager);
-
-	/*
-	* GPT :
-		Manager는 저장과 로드를 호출만 해주면 돼기때문에 
-		람다를 활용하여 의존성을 낮춰주고, 
-		현재는 JSon을 활용하지만, 다른 세이브 방식을 이용할 경우, 클래스 수정없이
-		람다를 활용한 저장소 교체로 유연성을 갖춤.
-		테스트 시 테스트용 람다를 적용시켜 테스트 환경에서도 동작을 변경하기 쉬움.
-
-		만들어보니 Manager가 Save를 호출할 필요가없는데?
-	*/
 
 	//Manager->SaveFunc = [this](const TMap<FName,FAchievementState>& States)
 	//{
@@ -60,10 +49,7 @@ void UAchievementsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	};
 
 	TArray<FAchievementDef> Defs;
-	// 업적  데이터 에셋을 가져오기 위한 부분
-	const FSoftObjectPath Path = AchievementData.ToSoftObjectPath();
-	UE_LOG(LogTemp,Warning,TEXT("AchievementData Path = %s"),*Path.ToString());
-	
+	// 업적  데이터 에셋을 가져오기 위한 부분	
 	GetDefAchieve(Defs);
 	
 	Manager->Initialize(Defs);

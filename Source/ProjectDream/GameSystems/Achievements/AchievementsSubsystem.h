@@ -24,7 +24,6 @@ public:
 public:
 
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-
 	virtual void Deinitialize() override;
 
 	void AddProgress(FName Id, int32 Delta = 1);

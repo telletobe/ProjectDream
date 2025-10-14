@@ -67,7 +67,6 @@ public:
 	AProjectDreamCharacter();	
 
 	virtual void BeginPlay() override;
-	TObjectPtr<class UGameInventory> GetItemInventory() { return ItemInventory.Get(); }
 
 	void SetInteractTarger(class AGameItem* Target);
 	void ClearInteractTarget(UObject* Who);
@@ -129,8 +128,6 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 private :
-	TObjectPtr<class UGameInventory> ItemInventory;
-
 	UPROPERTY() 
 	class AGameItem* Focused = nullptr;
 };

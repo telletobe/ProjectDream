@@ -1,7 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "ProjectDreamGameMode.h"
-#include "WorldTimeController/TimeSubsystemManager.h"
+#include "WorldTimeController/TimeSubsystem.h"
 #include "WorldTimeController/WorldTimeController.h"
 #include "Subsystems/GameInstanceSubsystem.h"  
 
@@ -12,7 +12,7 @@ void AProjectDreamGameMode::BeginPlay()
 
 	if (GI)
 	{
-		WorldTimerManager = GI->GetSubsystem<UTimeSubsystemManager>();
+		WorldTimerManager = GI->GetSubsystem<UTimeSubsystem>();
 		if (!WorldTimerManager) return;
 		WorldTime = UWorldTimeController::GetInstance();
 		if (!WorldTime) return;

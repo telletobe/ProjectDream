@@ -25,8 +25,6 @@ AGameItem::AGameItem()
 	{
 		BoxMesh->SetupAttachment(BoxCollision);
 	}
-	
-
 }
 
 // Called when the game starts or when spawned
@@ -38,12 +36,6 @@ void AGameItem::BeginPlay()
 		BoxCollision->OnComponentBeginOverlap.AddUniqueDynamic(this, &AGameItem::OnBoxBegin);
 		BoxCollision->OnComponentEndOverlap.AddUniqueDynamic(this, &AGameItem::OnBoxEnd);
 	}
-
-	//Unique ID가 필요한 경우 UniqueID 생성	
-	if (!ItemData.UniqueID.IsValid())
-	{
-		ItemData.MakeUniqueID();
-	}	
 }
 
 // Called every frame
@@ -55,22 +47,24 @@ void AGameItem::Tick(float DeltaTime)
 
 void AGameItem::Interact(ACharacter* Interactor)
 {
-	AProjectDreamCharacter* Player = Cast< AProjectDreamCharacter>(Interactor);
-	if (Player)
+	if (!GetWorld()) return;
+
+	UGameInventory* PlayerInv = UGameInventory::Get();
+	if (PlayerInv)
 	{
-		UGameInventory* PlayerInv = Player->GetItemInventory();
-		if (PlayerInv)
+		if (PlayerInv->AddToInventory({ GetItemID(), GetItemCategory() }, GetWorld()))
 		{
-			Player->OnInteractAction.RemoveDynamic(this, &AGameItem::Interact);
-			PlayerInv->AddToInventory(ItemData);
+			UE_LOG(LogTemp, Warning, TEXT("ItemID : %d"), GetItemID());
+			UE_LOG(LogTemp, Warning, TEXT("아이템 획득"));
 			Destroy();
 		}
-	}
-}
 
-void AGameItem::SetItemData(const FGameItemData Data)
-{
-	ItemData = Data;
+	}
+	else
+	{
+		UE_LOG(LogTemp,Warning,TEXT("인벤토리 데이터가 유효하지않음"));
+	}
+
 }
 
 void AGameItem::OnBoxBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -99,6 +93,12 @@ void AGameItem::OnBoxEnd(UPrimitiveComponent* OverlappedComponent, AActor* Other
 
 void AGameItem::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	if (BoxCollision)
+	{
+		BoxCollision->OnComponentBeginOverlap.RemoveAll(this);
+		BoxCollision->OnComponentEndOverlap.RemoveAll(this);
+	}
+
 	if (BoundCharacter.IsValid())
 	{
 		if (AProjectDreamCharacter* P = Cast<AProjectDreamCharacter>(BoundCharacter.Get()))
@@ -110,7 +110,6 @@ void AGameItem::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		}
 		BoundCharacter = nullptr;
 	}
-
 	Super::EndPlay(EndPlayReason);
 }
 
