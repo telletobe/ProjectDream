@@ -6,32 +6,20 @@
 #include "Blueprint/UserWidget.h"
 #include "AchievementListWidget.generated.h"
 
-/**
- * 
- */
+class UAchieveViewWrapper;
 UCLASS()
 class PROJECTDREAM_API UAchievementListWidget : public UUserWidget
 {
 	GENERATED_BODY()
 	
 public:
-
 	virtual void NativeConstruct() override;
 private:
-	UFUNCTION()
-	void OnOffUI();
-	
+	UFUNCTION()	void OnOffUI();
 	void RefreshAll();
+	UFUNCTION()	void UpdateAchieveEntry(const FName EventId);
+	UPROPERTY(meta = (BindWidget)) TObjectPtr<class UListView> AchieveList;
+	//void BulidList();
 
-	UFUNCTION()
-	void UpdateAchieveEntry(FName EventId);
-
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UListView> AchieveList;
-	
-	UPROPERTY()
-	TObjectPtr<class UAchievementsManager> AchieveManager = nullptr;
-
-	UPROPERTY()
-	TMap<FName, TObjectPtr<class UAchieveViewWrapper>> IdToItem;
+	UPROPERTY() TMap<FName, UAchieveViewWrapper*> IdToItem;
 };

@@ -16,8 +16,8 @@ enum class EAchievementType : uint8
 UENUM(BlueprintType)
 enum class EGameEventType : uint8
 {
-	GameStarted,
-	ItemGet
+	Login,
+	InventoryAdded
 };
 
 // 업적 정의
@@ -29,12 +29,11 @@ struct FAchievementDef
 	// 업적을 코드/데이터상에서 구분
 	UPROPERTY(EditAnywhere, BlueprintReadOnly) FName Id = NAME_None; 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly) EAchievementType AchieveType = EAchievementType::Instant;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly) EGameEventType EventType = EGameEventType::GameStarted;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly) EGameEventType EventType = EGameEventType::Login;
 
 	//즉시형이면 값 무시 혹은 0 유지
 	// 업적이 누적용일 경우. ex) 킬 카운트
 	UPROPERTY(EditAnywhere, BlueprintReadOnly) int32 Target = 0; 
-
 	// UI용 업적 제목
 	UPROPERTY(EditAnywhere, BlueprintReadOnly) FText Title; 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly) FText Description;
@@ -45,16 +44,9 @@ USTRUCT(BlueprintType)
 struct FAchievementState
 {
 	GENERATED_BODY()
-
-	UPROPERTY(SaveGame, EditAnywhere,BlueprintReadOnly)
 	FName Id = NAME_None;
-
-	UPROPERTY(SaveGame, EditAnywhere, BlueprintReadOnly)
 	int32 Progress = 0;
-	UPROPERTY(SaveGame, EditAnywhere, BlueprintReadOnly)
-	bool bUnlocked = false;
-	UPROPERTY(SaveGame, EditAnywhere, BlueprintReadOnly)
-	FDateTime UnlockedAt;
+	FDateTime UnlockedTime = FDateTime::MaxValue();
 };
 
 UCLASS()

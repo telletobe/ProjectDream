@@ -20,6 +20,9 @@ bool UGameInventory::Init(int32 InvSize)
 	{
 		return true;
 	}
+
+	
+
 }
 
 bool UGameInventory::SaveInventoryData()
@@ -55,7 +58,6 @@ int32 UGameInventory::FindEmptySlotIndex()
 
 	if (InventoryData.Num() <= 0)
 	{
-		UE_LOG(LogTemp,Warning,TEXT("인벤토리 초기화돼지 않음"));
 		return INDEX_NONE;
 	}
 
@@ -64,31 +66,12 @@ int32 UGameInventory::FindEmptySlotIndex()
 		if (InventoryData[i].GetItemID() == INVALID_ITEM_ID)
 		{
 			FindEmptyIdx = i;
-			UE_LOG(LogTemp, Warning, TEXT("빈칸 찾음"));
 			return FindEmptyIdx;
 		}
 	}
 	
 	return INDEX_NONE;
 }
-
-//void UGameInventory::ItemDrop(int32 TargetIndex)
-//{
-//	if (TargetIndex <= INDEX_NONE) return;
-//	//if (!InventoryData.IsValidIndex(TargetIndex)) return;
-//
-//	//InventoryData.RemoveAt(TargetIndex);
-//	////ChangeInventoryDataWithIndex.Broadcast(TargetIndex);
-//
-//	//if (SaveInventoryData())
-//	//{
-//	//	UE_LOG(LogTemp, Warning, TEXT("GameInstance valid"));
-//	//}
-//	//else
-//	//{
-//	//	UE_LOG(LogTemp, Warning, TEXT("GameInstance Invalid"));
-//	//}
-//}
 
 UGameInventory* UGameInventory::Get()
 {
@@ -104,35 +87,15 @@ UGameInventory* UGameInventory::Get()
 	return Instance;
 }
 
-//bool UGameInventory::CreateItemDataToUIWithDrop(const FDreamGameItemDef& DropData)
-//{
-//	//if (!Player.IsValid())  return false;
-//
-//	//UWorld* World = Player->GetWorld();
-//	//if (!World) return false;
-//
-//	//FVector SpawnLocation = Player->GetActorLocation() + Player->GetActorForwardVector() * 50.0f;
-//	//FRotator SpawnRotator = Player->GetActorRotation();
-//
-//	//FActorSpawnParameters Params;
-//	//Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-//
-//	//AGameItem* DropItem = World->SpawnActor<AGameItem>(
-//	//	AGameItem::StaticClass(),
-//	//	SpawnLocation,
-//	//	SpawnRotator,
-//	//	Params);
-//
-//	//if (DropItem)
-//	//{
-//	//	DropItem->SetItemData(DropData);
-//	//}
-//
-//	return true;
-//}
-
 bool UGameInventory::AddToInventory(TPair<int32, EItemCategory> NewItmeKeyPair, UWorld* CurrentWorld)
 {
+	// 인벤토리에 빈칸이 없다면 false 를 반환
+	int32 EmptySlot = FindEmptySlotIndex();
+	if (EmptySlot == INDEX_NONE) 
+	{
+		return false;
+	}
+
 	if (CurrentWorld)
 	{
 		if (UGameInstance* GI = CurrentWorld->GetGameInstance())
@@ -142,12 +105,10 @@ bool UGameInventory::AddToInventory(TPair<int32, EItemCategory> NewItmeKeyPair, 
 				const FDreamGameItemDef* ItemDef = InvSubSys->GetItemDefByKey(NewItmeKeyPair.Key, NewItmeKeyPair.Value);
 				if (!ItemDef) 
 				{
-					UE_LOG(LogTemp, Warning, TEXT("아이템의 정의가 없음"));
 					return false;
 				}
 				FDreamGameItemInstance NewItem(NewItmeKeyPair.Key, NewItmeKeyPair.Value);
 				NewItem.MakeUniqueID();
-				UE_LOG(LogTemp,Warning,TEXT("획득한 아이템 아이디 : %d"),ItemDef->GetItemID());
 
 				// 인벤토리에 같은 아이템이 있는지 검색
 				if (InventoryData.Find(NewItem) != INDEX_NONE)
@@ -159,48 +120,41 @@ bool UGameInventory::AddToInventory(TPair<int32, EItemCategory> NewItmeKeyPair, 
 						const int32 RemainingStackCnt = ItemDef->GetMaxStackCnt();
 						const int32 ToMoveStackCnt = InventoryData[FindItemIdx].GetItemStackCnt() - RemainingStackCnt;
 						// 기존에 할당되어있는 인벤토리 공간중 빈 곳을 순회해서 찾음.
-						int32 EmptySlot = FindEmptySlotIndex();
 						InventoryData[EmptySlot] = NewItem;
 						InventoryData[EmptySlot].SetItemStackCnt(ToMoveStackCnt);
+						//
 						ChangeInventoryData.Broadcast();
+						OnItemAdded.Broadcast(NewItem.GetItemCategory(), NewItem.GetItemID());
 						return true;
 					}
 					InventoryData[FindItemIdx].AddItemStack(NewItem.GetItemStackCnt());
+					//
 					ChangeInventoryData.Broadcast();
+					OnItemAdded.Broadcast(NewItem.GetItemCategory(), NewItem.GetItemID());
 					return true;
 				}
 				// 인벤토리에 같은 아이템이 없는경우
 				else
 				{
-					UE_LOG(LogTemp, Warning, TEXT("새로운 아이템 획득"));
-					const int32 EmptySlot = FindEmptySlotIndex();
-
-					if (EmptySlot > InventoryData.Num() || EmptySlot == INDEX_NONE)
-					{
-						UE_LOG(LogTemp, Warning, TEXT("인벤토리 공간없음"));
-						return false;
-					}
-
 					InventoryData[EmptySlot] = NewItem;
+					//
 					ChangeInventoryData.Broadcast();
+					OnItemAdded.Broadcast(NewItem.GetItemCategory(), NewItem.GetItemID());
 					return true;
 				}
 			}
 			else
 			{
-				UE_LOG(LogTemp, Warning, TEXT("서브시스템 정보 누락"));
 				return false;
 			}
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("인스턴스 정보 누락"));
 			return false;
 		}
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("월드 정보 누락"));
 		return false;
 	}
 }

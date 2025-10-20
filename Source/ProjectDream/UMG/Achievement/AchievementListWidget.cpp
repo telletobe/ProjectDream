@@ -10,17 +10,6 @@
 
 void UAchievementListWidget::NativeConstruct()
 {
-	if (!AchieveManager)
-	{
-		if (UGameInstance* GI = GetGameInstance())
-		{
-			if (auto* SubSys = GI->GetSubsystem<UAchievementsSubsystem>())
-			{
-				AchieveManager = SubSys->GetManager();
-			}			
-		}
-	}
-
 	if (UGameInstance* GI = GetGameInstance())
 	{
 		if (auto* SubSys = GI->GetSubsystem<UAchievementsSubsystem>())
@@ -38,7 +27,6 @@ void UAchievementListWidget::NativeConstruct()
 			Player->OnAchievementEvent.AddUniqueDynamic(this, &UAchievementListWidget::OnOffUI);	
 		}
 	}
-
 	RefreshAll();
 }
 
@@ -66,67 +54,84 @@ void UAchievementListWidget::OnOffUI()
 
 void UAchievementListWidget::RefreshAll()
 {
-	if (!AchieveList || !AchieveManager) return;
+	if (!AchieveList) return;
 
 	TArray<FAchievementViewData> Views;
 	TArray<FName> AchieveIds;
-	AchieveManager->GetAllAchievementsViewData(Views, AchieveIds);
+
+
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		if (UAchievementsSubsystem* SubSys = GI->GetSubsystem<UAchievementsSubsystem>())
+		{
+			SubSys->GetViewData(Views,AchieveIds);
+		}
+	}
 
 	AchieveList->ClearListItems();
+
+	UE_LOG(LogTemp,Warning,TEXT("View 길이 : %d"), Views.Num());
 
 	TArray<UObject*> Items;
 	Items.Reserve(Views.Num());
 
-	ensure(Views.Num() == AchieveIds.Num());
-
-
 	for (int32 i = 0; i < Views.Num(); i++)
 	{
 		auto* Row = NewObject<UAchieveViewWrapper>(this);
-		Row->AchieveId = AchieveIds[i];
 		Row->Data = Views[i];
 		Items.Add(Row);
-		IdToItem.Add(Row->AchieveId, Row);
+		IdToItem.Add(AchieveIds[i], Row);
 	}
-	
-
 	AchieveList->SetListItems(Items);
 }
 
-void UAchievementListWidget::UpdateAchieveEntry(FName EventId)
+void UAchievementListWidget::UpdateAchieveEntry(const FName EventId)
 {
 	UE_LOG(LogTemp,Warning,TEXT("Call UpdateAchieveEntry"));
+	if (!AchieveList) return;
 
-	FAchievementViewData View;
-
-	//
-	if (!AchieveManager)
+	FAchievementViewData View = FAchievementViewData();
+	if (UGameInstance* GI = GetGameInstance())
 	{
-		if (UGameInstance* GI = GetGameInstance())
+		if (UAchievementsSubsystem* SubSys = GI->GetSubsystem<UAchievementsSubsystem>())
 		{
-			if (UAchievementsSubsystem* SubSys = GI->GetSubsystem<UAchievementsSubsystem>())
-			{
-				SubSys->GetManager()->GetAchievementViewDataById(View, EventId);
-			}
+			SubSys->GetViewDataById(View,EventId);
 		}
 	}
-	//
 
-	AchieveManager->GetAchievementViewDataById(View, EventId);
-
-	if (UAchieveViewWrapper* Item = IdToItem.FindRef(EventId))
+	if (UAchieveViewWrapper* Item = *IdToItem.Find(EventId))
 	{
-		Item->Data = View;
-
-		UE_LOG(LogTemp, Warning, TEXT("ViewData : %s %d"),*View.Title.ToString(), View.Progress);
-
-
 		if (UUserWidget* Row = AchieveList->GetEntryWidgetFromItem(Item))
 		{
-			if (auto* Entry = Cast<UAchievementEntryWidget>(Row))
+			if (UAchievementEntryWidget* Entry = Cast<UAchievementEntryWidget>(Row))
 			{
-				Entry->SyncFromItem();
+				Entry->SetViewItem(View);
+				Entry->SyncFromItem();	
 			}
 		}
 	}
 }
+
+//void UAchievementListWidget::BulidList()
+//{
+//	TArray<FName> IdsArr;
+//	TArray<FAchievementViewData> ViewsArr;
+//	if (UGameInstance* GI = GetGameInstance())
+//	{
+//		if (auto* SubSys = GI->GetSubsystem<UAchievementsSubsystem>())
+//		{
+//			SubSys->GetViewData(ViewsArr,IdsArr);
+//		}
+//	}
+//
+//	if (IdsArr.Num() != ViewsArr.Num())
+//	{
+//		return;
+//	}
+//
+//	for (int32 i = 0; i < IdsArr.Num(); i++)
+//	{
+//		IdToItem.Add(IdsArr[i], ViewsArr[i]);
+//	}
+//
+//}

@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
-#include "AchievementUIViewData.h"
+#include "AchievementViewData.h"
 #include "AchieveViewWrapper.generated.h"
 
 /**
@@ -16,9 +16,8 @@ class PROJECTDREAM_API UAchieveViewWrapper : public UObject
 	GENERATED_BODY()
 	
 public:
+
+public:
 	UPROPERTY()
 	FAchievementViewData Data;	
-
-	UPROPERTY()
-	FName AchieveId;
 };

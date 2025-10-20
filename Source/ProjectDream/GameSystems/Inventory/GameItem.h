@@ -36,7 +36,6 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 private:
-
 	UPROPERTY(EditAnywhere) TObjectPtr<class UBoxComponent> BoxCollision;
 	UPROPERTY(EditAnywhere)	TObjectPtr<class UStaticMeshComponent> BoxMesh;
 	UPROPERTY(EditAnywhere, Category="Item") int32 ItemID =-1;

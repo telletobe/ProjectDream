@@ -3,20 +3,22 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AchievementUIViewData.generated.h"
+#include "AchievementViewData.generated.h"
 
 USTRUCT(BlueprintType)
 struct FAchievementViewData
 {
 	GENERATED_BODY()
 
-//	UPROPERTY(EditAnywhere, BlueprintReadWrite) FName Id;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FText Title;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FText Description;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) TObjectPtr<UTexture2D> Icon = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 TargetValue = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 Progress = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) bool  bUnlocked = false;
+
+	bool operator== (const FAchievementViewData& Rhs);
+	FAchievementViewData() = default;
 
 	// 계산 필드(편의)
 	float GetPercent() const

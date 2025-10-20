@@ -13,6 +13,7 @@ void UAchievementEntryWidget::NativeOnListItemObjectSet(UObject* ListItemObject)
 	if (const UAchieveViewWrapper* Row = Cast<UAchieveViewWrapper>(ListItemObject))
 	{
 		Item = Row->Data;
+		UE_LOG(LogTemp,Warning,TEXT("Entry ItemProgress : %d"),Item.Progress);
 	}
 	SyncFromItem();
 }
@@ -24,7 +25,6 @@ void UAchievementEntryWidget::SyncFromItem()
 	if (TextTitle)
 	{
 		TextTitle->SetText(Item.Title);
-		UE_LOG(LogTemp,Warning,TEXT("Title : %s "), *Item.Title.ToString());
 	}
 
 	if (DescText)
@@ -35,13 +35,11 @@ void UAchievementEntryWidget::SyncFromItem()
 	if (ProgressText)
 	{
 		ProgressText->SetText(Item.GetProgressText());
-		UE_LOG(LogTemp, Warning, TEXT("Title : %s "), *Item.GetProgressText().ToString());
 	}
 
 	if (StatusText)
 	{
 		StatusText->SetText(Item.GetStatusText());
-		UE_LOG(LogTemp, Warning, TEXT("Title : %s "), *Item.GetStatusText().ToString());
 	}
 
 	if (AchieveClear)
@@ -51,6 +49,11 @@ void UAchievementEntryWidget::SyncFromItem()
 			AchieveClear->SetPercent(1.0f);
 		}
 	}
+}
+
+void UAchievementEntryWidget::SetViewItem(FAchievementViewData ViewItem)
+{
+	Item = ViewItem;
 }
 
 

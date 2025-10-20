@@ -23,7 +23,7 @@ struct FDreamGameItemDef
 	GENERATED_BODY()
 
 public:
-	FDreamGameItemDef() : ItemCategory(EItemCategory::Other), ItemName(TEXT("NAME_NONE")), ItemDescription(TEXT("DESC_NONE")), ItemWeight(0.0), MaxStackCnt(1), ItemID(INVALID_ITEM_ID) {}
+	FDreamGameItemDef() : ItemCategory(EItemCategory::Other), ItemName(TEXT("NAME_None")), ItemDescription(TEXT("DESC_NONE")), ItemWeight(0.0), MaxStackCnt(1), ItemID(INVALID_ITEM_ID) {}
 	bool operator ==(const FDreamGameItemDef& Other) const;
 	bool operator !=(const FDreamGameItemDef& Other) const;
 	int32 GetItemID() const { return ItemID; }
@@ -33,7 +33,6 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Data")		 FString ItemName;
 	UPROPERTY(EditAnywhere, Category = "Data")		 FString ItemDescription;
 	UPROPERTY(EditAnywhere, Category = "Data")		 float ItemWeight;
-
 private:
 	UPROPERTY(EditAnywhere, Category = "Data")		 int32 MaxStackCnt;
 	UPROPERTY(EditAnywhere, Category = "Data")		 int32 ItemID;

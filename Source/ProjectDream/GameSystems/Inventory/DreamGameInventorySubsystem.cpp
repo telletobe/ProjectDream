@@ -21,7 +21,6 @@ void UDreamGameInventorySubsystem::Initialize(FSubsystemCollectionBase& Collecti
 			ItemDefs = ItemDTO->ItemsDef;
 			for (const FDreamGameItemDef& Data : ItemDefs)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("데이터 아이디 : %d"), Data.GetItemID());
 				if (Data.GetItemID() == INVALID_ITEM_ID)
 				{
 					UE_LOG(LogTemp, Warning, TEXT("잘못 정의된 데이터가 있습니다. 해당 데이터를 무시합니다."));
@@ -40,17 +39,9 @@ void UDreamGameInventorySubsystem::Initialize(FSubsystemCollectionBase& Collecti
 		}
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("아이템 카탈로그 길이 : %d"),ItemsCatalog.Num());
-
 	if (!PlayerInventory)
 	{
 		PlayerInventory = UGameInventory::Get();
-		if (!PlayerInventory)
-		{
-			UE_LOG(LogTemp,Warning,TEXT("인벤토리 초기화 실패"));
-			return;
-		}
-
 		if (PlayerInventory->Init())
 		{
 			UE_LOG(LogTemp,Warning,TEXT("인벤토리 초기화 완료"));
@@ -85,7 +76,6 @@ const TMap<int32, TMap<EItemCategory, FDreamGameItemDef>>  UDreamGameInventorySu
 {
 	if (ItemsCatalog.Num() <= 0) 
 	{
-		UE_LOG(LogTemp, Warning, TEXT("아이템 정의 데이터 없음"));
 		return TMap<int32, TMap<EItemCategory, FDreamGameItemDef>>();
 	}
 	return ItemsCatalog;

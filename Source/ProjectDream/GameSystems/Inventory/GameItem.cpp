@@ -54,17 +54,13 @@ void AGameItem::Interact(ACharacter* Interactor)
 	{
 		if (PlayerInv->AddToInventory({ GetItemID(), GetItemCategory() }, GetWorld()))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("ItemID : %d"), GetItemID());
-			UE_LOG(LogTemp, Warning, TEXT("아이템 획득"));
 			Destroy();
 		}
-
 	}
 	else
 	{
 		UE_LOG(LogTemp,Warning,TEXT("인벤토리 데이터가 유효하지않음"));
 	}
-
 }
 
 void AGameItem::OnBoxBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)

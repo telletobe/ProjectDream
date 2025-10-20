@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "../../GameSystems/Achievements/AchievementUIViewData.h"
+#include "../../GameSystems/Achievements/AchievementViewData.h"
 #include "Blueprint/IUserObjectListEntry.h"
 #include "AchievementEntryWidget.generated.h"
 
@@ -24,6 +24,7 @@ public:
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
 	void UpdateProgress();
 	void SyncFromItem();
+	void SetViewItem(FAchievementViewData ViewItem);
 private:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UTextBlock> TextTitle;
