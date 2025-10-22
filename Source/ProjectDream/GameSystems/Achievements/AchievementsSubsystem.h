@@ -32,21 +32,21 @@ public:
 	const FAchievementState* GetAchievementStateById(const FName& EventId) const;
 	const TMap <FName, FAchievementDef> GetAllAchievementDef();
 	const TMap<FName, FAchievementState> GetAllAchievementState();
-	UFUNCTION()
-	void HandleAchieveEvent(FName EventId);
-	void RequestSave(const TMap<FName,FAchievementState>& StateData);
 	void GetViewData(TArray<FAchievementViewData>& OutViewArr, TArray<FName>& OutIdsArr);
 	void GetViewDataById(FAchievementViewData& OutView,const FName& EventId);
+	void RequestSave(const TMap<FName,FAchievementState>& StateData);
+	UFUNCTION()	void HandleAchieveEvent(FName EventId); // 현재 미사용
 private:
 	TMap<FName, FAchievementState> LoadNow();
 	void SaveNow(const TMap<FName, FAchievementState>& InStates);
 	void FlushPendingSave();
 	void LoadAchievementDef(TArray<FAchievementDef>& OutDefs) const;
 	bool UpdateAchieve(FName& EventId);
-	bool HandleProgressEvent(FName& EventId, const FAchievementDef& OutDef, FAchievementState& OutState);
-	bool UpdateProgress(FName& EventId);
-	UFUNCTION()
-	void HandleItemAdded(EItemCategory ItemCategory, int32 ItemID);
+	bool HandleProgressEvent(FName& EventId, const FAchievementDef& OutDef, FAchievementState& OutState); // 현재 미사용
+	void UpdateProgress(const FAchievementDef& Def, const FName& EventId);
+private:
+	void HandleLogin();
+	UFUNCTION()	void HandleItemAdded(EItemCategory ItemCategory, int32 ItemID);
 private:
 	UPROPERTY(EditAnywhere, config, Category = "Achievements")
 	TSoftObjectPtr<class UDreamAchievements> AchievementData;
@@ -122,7 +122,7 @@ namespace AchIdParse
 		return false;		
 	}
 
-	static bool ParseAchievemType(const FName AchievementId, EGameEventType& OutType)
+	static bool ParseAchievementType(const FName AchievementId, EGameEventType& OutType)
 	{
 		const FString S = AchievementId.ToString();
 		TArray<FString> Tokens;

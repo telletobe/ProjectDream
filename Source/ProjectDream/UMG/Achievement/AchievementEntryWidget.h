@@ -24,7 +24,7 @@ public:
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
 	void UpdateProgress();
 	void SyncFromItem();
-	void SetViewItem(FAchievementViewData ViewItem);
+	void SetViewItem(FAchievementViewData* ViewItem);
 private:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UTextBlock> TextTitle;

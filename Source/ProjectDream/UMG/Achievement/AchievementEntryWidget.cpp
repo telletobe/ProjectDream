@@ -51,9 +51,9 @@ void UAchievementEntryWidget::SyncFromItem()
 	}
 }
 
-void UAchievementEntryWidget::SetViewItem(FAchievementViewData ViewItem)
+void UAchievementEntryWidget::SetViewItem(FAchievementViewData* ViewItem)
 {
-	Item = ViewItem;
+	Item = *ViewItem;
 }
 
 

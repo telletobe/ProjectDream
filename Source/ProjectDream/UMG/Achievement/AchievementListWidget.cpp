@@ -105,10 +105,15 @@ void UAchievementListWidget::UpdateAchieveEntry(const FName EventId)
 		{
 			if (UAchievementEntryWidget* Entry = Cast<UAchievementEntryWidget>(Row))
 			{
-				Entry->SetViewItem(View);
+				Entry->SetViewItem(&View);
 				Entry->SyncFromItem();	
 			}
 		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UpdateAchieveEntry null"));
+		return;
 	}
 }
 

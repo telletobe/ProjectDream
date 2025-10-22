@@ -17,7 +17,8 @@ UENUM(BlueprintType)
 enum class EGameEventType : uint8
 {
 	Login,
-	InventoryAdded
+	InventoryAdded,
+	EventNone
 };
 
 // 업적 정의

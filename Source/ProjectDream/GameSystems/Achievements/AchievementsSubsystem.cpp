@@ -36,14 +36,12 @@ void UAchievementsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		States.FindOrAdd(Def.Id);
 		DefsByEventType.FindOrAdd(Def.EventType).Add(Def);
 	}
-	/*해당 로그는 EventType의 배열이 생성돼지않을 경우 nullptr을 반환해서 에러가 발생*/
-	UE_LOG(LogTemp, Warning, TEXT("게임아이템 획득 업적 길이 : %d"), DefsByEventType.Find(EGameEventType::InventoryAdded)->Num());
-	UE_LOG(LogTemp, Warning, TEXT("로그인 업적 길이 : %d"), DefsByEventType.Find(EGameEventType::Login)->Num());
 
 	if (UGameInventory* Inv = UGameInventory::Get())
 	{
 		Inv->OnItemAdded.AddDynamic(this, &UAchievementsSubsystem::HandleItemAdded);
 	}
+	HandleLogin();
 }
 
 void UAchievementsSubsystem::LoadAchievementDef(TArray<FAchievementDef>& OutDefs) const
@@ -84,8 +82,6 @@ const TMap<FName, FAchievementState> UAchievementsSubsystem::GetAllAchievementSt
 {
 	return States;
 }
-
-
 
 void UAchievementsSubsystem::HandleAchieveEvent(FName EventId)
 {
@@ -175,7 +171,6 @@ void UAchievementsSubsystem::FlushPendingSave()
 	{
 		StateArr.Add(KVP.Value);
 	}
-
 	SaveJson::SaveArrayToFile(TEXT("Achievements"), StateArr);
 	PendingState.Empty();
 }
@@ -187,40 +182,74 @@ bool UAchievementsSubsystem::UpdateAchieve(FName& EventId)
 
 bool UAchievementsSubsystem::HandleProgressEvent(FName& EventId, const FAchievementDef& OutDef, FAchievementState& OutState)
 {
-	if (OutDef.Target >= OutState.Progress && OutState.UnlockedTime != FDateTime::MaxValue()) // 업적 클리어 전
-	{
-		UpdateProgress(EventId);
+	//// 현재 미사용 코드
+	//if (OutDef.Target >= OutState.Progress && OutState.UnlockedTime != FDateTime::MaxValue()) // 업적 클리어 전
+	//{
+	//	UpdateProgress(EventId);
 
-		if (OutDef.Target <= OutState.Progress)
-		{
-			if (UpdateAchieve(EventId))
-			{
-				UE_LOG(LogTemp, Warning, TEXT("업적 클리어"));
-				return true;				
-			}
-			else
-			{
-				UE_LOG(LogTemp, Warning, TEXT("누적 정보를 저장하였습니다."));
-				return true;
-			}
-		}
-		return true;
-	}
-	else // 이미 클리어 됀 후. 저장을 하지않거나 누적 상황 별도 갱신
-	{
-		if (UpdateProgress(EventId))
-		{
-			UE_LOG(LogTemp, Warning, TEXT("누적정보 세이브 완료"));
-			return true;
-		}
-	}
+	//	if (OutDef.Target <= OutState.Progress)
+	//	{
+	//		if (UpdateAchieve(EventId))
+	//		{
+	//			UE_LOG(LogTemp, Warning, TEXT("업적 클리어"));
+	//			return true;				
+	//		}
+	//		else
+	//		{
+	//			UE_LOG(LogTemp, Warning, TEXT("누적 정보를 저장하였습니다."));
+	//			return true;
+	//		}
+	//	}
+	//	return true;
+	//}
+	//else // 이미 클리어 됀 후. 저장을 하지않거나 누적 상황 별도 갱신
+	//{
+	//	if (UpdateProgress(EventId))
+	//	{
+	//		UE_LOG(LogTemp, Warning, TEXT("누적정보 세이브 완료"));
+	//		return true;
+	//	}
+	//}
 
 	return false;
 }
 
-bool UAchievementsSubsystem::UpdateProgress(FName& EventId)
+void UAchievementsSubsystem::UpdateProgress(const FAchievementDef& Def,const FName& EventId)
 {
-	return true;
+	FAchievementState* State = States.Find(EventId);
+
+	if (!State) return;
+
+	State->Progress++;
+	if (Def.Target == State->Progress)
+	{
+		State->UnlockedTime = FDateTime::UtcNow();
+	}
+	// 진행 상황 저장 필요
+	if (FAchievementViewData* Data = IdsByView.Find(Def.Id))
+	{
+		Data->Progress++;
+		if (Data->TargetValue >= Data->Progress)
+		{
+			Data->bUnlocked = true;
+		}
+	}
+}
+
+void UAchievementsSubsystem::HandleLogin()
+{
+	TArray<FAchievementDef>* AchievementDef = DefsByEventType.Find(EGameEventType::Login);
+	if (!AchievementDef) return;
+
+	EGameEventType EventType = EGameEventType::EventNone;
+	FName AchieveID;
+
+	for (const auto& Achievement : *AchievementDef)
+	{
+		UpdateProgress(Achievement, Achievement.Id);
+		OnAchievementUpdated.Broadcast(Achievement.Id);
+		return;	
+	}
 }
 
 void UAchievementsSubsystem::HandleItemAdded(EItemCategory ItemCategory, int32 ItemID)
@@ -230,7 +259,7 @@ void UAchievementsSubsystem::HandleItemAdded(EItemCategory ItemCategory, int32 I
 
 	EItemCategory ParseCat = EItemCategory::Other;
 	int32 ItemId = -1;
-	FName AchieveID;
+	//FName AchieveID;
 
 	for (const auto& Achievement : *AchievementDef)
 	{
@@ -238,38 +267,14 @@ void UAchievementsSubsystem::HandleItemAdded(EItemCategory ItemCategory, int32 I
 		{
 			if (ParseCat != ItemCategory || ItemId != ItemID)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("업적이 일치하지 않음"));
 				continue;
 			}
-
-			FAchievementState* State = States.Find(Achievement.Id);
-			if (!State)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("업적 검색 실패"));
-				return;
-			}
-			State->Progress++;
-			// 진행 상황 저장 필요.
-			AchieveID = Achievement.Id;
-			UE_LOG(LogTemp,Warning,TEXT("업적 진행도 증가!"));
-			if (FAchievementViewData* Data = IdsByView.Find(AchieveID))
-			{
-				Data->Progress++;
-			}
-			OnAchievementUpdated.Broadcast(AchieveID);
-			
+			UpdateProgress(Achievement, Achievement.Id);
+			UE_LOG(LogTemp,Warning,TEXT(""));
+			OnAchievementUpdated.Broadcast(Achievement.Id);
 			return;
 		}
 	}
-	/*TESTCODE*/
-	/*int32 ItemCode = 0;
-	AchIdParse::EItemCategory ItemType;
-	if (AchIdParse::ParseItemTypeAndId(AchievementDef.Id, ItemType, ItemCode))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("ItemType : %s"), AchIdParse::ToString(ItemType));
-		UE_LOG(LogTemp, Warning, TEXT("ItemCode : %d"), ItemCode);
-	}*/
-	/*TESTCODE*/
 	return;
 }
 
