@@ -6,12 +6,13 @@
 #include "../Save/JsonSaveGame.h"
 #include "ProjectDreamCharacter.h"
 
+// 아이템 데이터가 없으면 아이템 카테고리가 None
+
 TObjectPtr<UGameInventory> UGameInventory::Instance = nullptr;
 
 bool UGameInventory::Init(int32 InvSize) 
 {
 	InventoryData.Init(FDreamGameItemInstance(), InvSize);
-
 	if (InventoryData.Num() <= 0)
 	{
 		return false;
@@ -20,9 +21,6 @@ bool UGameInventory::Init(int32 InvSize)
 	{
 		return true;
 	}
-
-	
-
 }
 
 bool UGameInventory::SaveInventoryData()
@@ -33,6 +31,7 @@ bool UGameInventory::SaveInventoryData()
 	}
 	return true;
 }
+
 
 bool UGameInventory::SetInventoryData(TArray<FDreamGameItemInstance> LoadData)
 {
@@ -69,8 +68,13 @@ int32 UGameInventory::FindEmptySlotIndex()
 			return FindEmptyIdx;
 		}
 	}
-	
 	return INDEX_NONE;
+}
+
+void UGameInventory::ItemAddedBroadCast(EItemCategory Category, int32 ItemID)
+{
+	ChangeInventoryData.Broadcast();
+	OnItemAdded.Broadcast(Category, ItemID);
 }
 
 UGameInventory* UGameInventory::Get()
@@ -89,7 +93,6 @@ UGameInventory* UGameInventory::Get()
 
 bool UGameInventory::AddToInventory(TPair<int32, EItemCategory> NewItmeKeyPair, UWorld* CurrentWorld)
 {
-	// 인벤토리에 빈칸이 없다면 false 를 반환
 	int32 EmptySlot = FindEmptySlotIndex();
 	if (EmptySlot == INDEX_NONE) 
 	{
@@ -122,24 +125,18 @@ bool UGameInventory::AddToInventory(TPair<int32, EItemCategory> NewItmeKeyPair, 
 						// 기존에 할당되어있는 인벤토리 공간중 빈 곳을 순회해서 찾음.
 						InventoryData[EmptySlot] = NewItem;
 						InventoryData[EmptySlot].SetItemStackCnt(ToMoveStackCnt);
-						//
-						ChangeInventoryData.Broadcast();
-						OnItemAdded.Broadcast(NewItem.GetItemCategory(), NewItem.GetItemID());
+						ItemAddedBroadCast(NewItem.GetItemCategory(), NewItem.GetItemID());
 						return true;
 					}
 					InventoryData[FindItemIdx].AddItemStack(NewItem.GetItemStackCnt());
-					//
-					ChangeInventoryData.Broadcast();
-					OnItemAdded.Broadcast(NewItem.GetItemCategory(), NewItem.GetItemID());
+					ItemAddedBroadCast(NewItem.GetItemCategory(), NewItem.GetItemID());
 					return true;
 				}
 				// 인벤토리에 같은 아이템이 없는경우
 				else
 				{
 					InventoryData[EmptySlot] = NewItem;
-					//
-					ChangeInventoryData.Broadcast();
-					OnItemAdded.Broadcast(NewItem.GetItemCategory(), NewItem.GetItemID());
+					ItemAddedBroadCast(NewItem.GetItemCategory(), NewItem.GetItemID());
 					return true;
 				}
 			}

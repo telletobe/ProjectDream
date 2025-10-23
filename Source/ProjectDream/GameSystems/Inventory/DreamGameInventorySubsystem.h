@@ -23,6 +23,7 @@ public:
 	const FDreamGameItemDef* GetItemDefByKey(int32 ItemID,EItemCategory Category) const;
 	const TMap<int32, TMap<EItemCategory, FDreamGameItemDef>> GetAllItemDefs();
 	TObjectPtr<UGameInventory> GetInventory() { return PlayerInventory.Get(); }
+	float GetInventoryWeight() const;
 private:
 	TMap<int32,TMap<EItemCategory,FDreamGameItemDef>> ItemsCatalog;
 	TObjectPtr<UGameInventory> PlayerInventory = nullptr;

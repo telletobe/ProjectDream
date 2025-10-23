@@ -40,8 +40,7 @@ private:
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<class UHorizontalBox> InventoryTopBar;
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<class UHorizontalBox> InventoryDescription;
 
-	UPROPERTY()
-	TObjectPtr<class UTextBlock> WeightText;
+	UPROPERTY()	TObjectPtr<class UTextBlock> WeightText;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UButton> ButtonClose;
@@ -53,7 +52,7 @@ private:
 	TObjectPtr<class UQuantityPrompt> DropNumPrompt;
 
 private:
-//	void UpdateWeightText();
+	void UpdateWeightText();
 };
 
 namespace EnumTextUtils

@@ -81,3 +81,21 @@ const TMap<int32, TMap<EItemCategory, FDreamGameItemDef>>  UDreamGameInventorySu
 	return ItemsCatalog;
 }
 
+float UDreamGameInventorySubsystem::GetInventoryWeight() const
+{
+	float TotalWeight = 0.f;
+
+	if (!PlayerInventory) return 0.0f;
+
+	TArray<FDreamGameItemInstance> InventoryData = PlayerInventory.Get()->GetInventoryData();
+
+	for (int32 i = 0; i < InventoryData.Num(); i++)
+	{
+		if (InventoryData[i].GetItemCategory() == EItemCategory::None) continue;
+		const FDreamGameItemDef* Def = GetItemDefByKey(InventoryData[i].GetItemID(), InventoryData[i].GetItemCategory());
+		if (!Def) continue;
+		TotalWeight += Def->GetItemWeight() * InventoryData[i].GetItemStackCnt();
+	}
+
+	return TotalWeight;
+}

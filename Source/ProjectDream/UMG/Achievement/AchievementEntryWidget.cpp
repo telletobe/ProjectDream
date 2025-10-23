@@ -44,7 +44,7 @@ void UAchievementEntryWidget::SyncFromItem()
 
 	if (AchieveClear)
 	{
-		if (Item.bUnlocked)
+		if (Item.UnlockedTime != FDateTime::MaxValue())
 		{
 			AchieveClear->SetPercent(1.0f);
 		}

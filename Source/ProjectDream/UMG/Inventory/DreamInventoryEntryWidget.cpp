@@ -38,6 +38,9 @@ void UDreamInventoryEntryWidget::SyncFromItem()
 	}
 	if (ItemWeight)
 	{
-		ItemWeight->SetText(FText::AsNumber(ItemView.ItemWeight));
+		FNumberFormattingOptions NumberFormat;
+		NumberFormat.MinimumFractionalDigits = 2; // 최소 소수점 2자리
+		NumberFormat.MaximumFractionalDigits = 2; // 최대 소수점 2자리
+		ItemWeight->SetText(FText::AsNumber(ItemView.ItemWeight,&NumberFormat));
 	}
 }

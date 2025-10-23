@@ -52,6 +52,22 @@ void UUserInventory::NativeOnInitialized()
 
 }
 
+void UUserInventory::UpdateWeightText()
+{
+	float Weight = 0.f;
+	FNumberFormattingOptions NumberFormat;
+	NumberFormat.MinimumFractionalDigits = 2; // 최소 소수점 2자리
+	NumberFormat.MaximumFractionalDigits = 2; // 최대 소수점 2자리
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		if (UDreamGameInventorySubsystem* SubSys = GI->GetSubsystem<UDreamGameInventorySubsystem>())
+		{
+			Weight = SubSys->GetInventoryWeight();
+		}
+	}	
+	if (WeightText) WeightText->SetText(FText::AsNumber(Weight,&NumberFormat));
+}
+
 void UUserInventory::OnOffInventory()
 {
 	ESlateVisibility CurrentVisible = GetVisibility();
@@ -111,14 +127,15 @@ void UUserInventory::UpdateInventoryUI()
 		}
 
 		UInventoryViewWrapper* Row = NewObject<UInventoryViewWrapper>(this);
+		// subSystem에서 수행 혹은 위젯 내부
 		Row->ViewData.ItemName = FText::FromString(Def->ItemName);
 		Row->ViewData.ItemDescription = FText::FromString(Def->ItemDescription);
-		Row->ViewData.ItemWeight = Def->ItemWeight * Instance.GetItemStackCnt();
+		Row->ViewData.ItemWeight = Def->GetItemWeight() * Instance.GetItemStackCnt();
 		Row->ViewData.ItemCategory = EnumTextUtils::GetDisplayName(Instance.GetItemCategory());
 		Row->ViewData.ItemStackCnt = Instance.GetItemStackCnt();
-
 		ViewItems.Add(Row);
 	}
+	UpdateWeightText();
 	UE_LOG(InventoryUIWidget, Warning, TEXT("Item View 데이터 길이 : %d"), ViewItems.Num());
 	ItemList->SetListItems(ViewItems);
 	ItemList->RequestRefresh();

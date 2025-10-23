@@ -56,15 +56,15 @@ void UAchievementListWidget::RefreshAll()
 {
 	if (!AchieveList) return;
 
+	IdToItem.Reset();
 	TArray<FAchievementViewData> Views;
 	TArray<FName> AchieveIds;
-
 
 	if (UGameInstance* GI = GetGameInstance())
 	{
 		if (UAchievementsSubsystem* SubSys = GI->GetSubsystem<UAchievementsSubsystem>())
 		{
-			SubSys->GetViewData(Views,AchieveIds);
+			SubSys->GetAllViewData(Views,AchieveIds);
 		}
 	}
 
@@ -116,27 +116,3 @@ void UAchievementListWidget::UpdateAchieveEntry(const FName EventId)
 		return;
 	}
 }
-
-//void UAchievementListWidget::BulidList()
-//{
-//	TArray<FName> IdsArr;
-//	TArray<FAchievementViewData> ViewsArr;
-//	if (UGameInstance* GI = GetGameInstance())
-//	{
-//		if (auto* SubSys = GI->GetSubsystem<UAchievementsSubsystem>())
-//		{
-//			SubSys->GetViewData(ViewsArr,IdsArr);
-//		}
-//	}
-//
-//	if (IdsArr.Num() != ViewsArr.Num())
-//	{
-//		return;
-//	}
-//
-//	for (int32 i = 0; i < IdsArr.Num(); i++)
-//	{
-//		IdToItem.Add(IdsArr[i], ViewsArr[i]);
-//	}
-//
-//}

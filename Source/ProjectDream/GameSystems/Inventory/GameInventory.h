@@ -10,7 +10,6 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FChangeInventoryData);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInventoryItemAdded, EItemCategory, ItemCategory, int32, ItemID);
 
 
-
 UCLASS()
 class PROJECTDREAM_API UGameInventory : public UObject
 {
@@ -27,10 +26,12 @@ public :
 	TArray<FDreamGameItemInstance> GetInventoryData() const { return InventoryData; }
 	const FDreamGameItemInstance& GetInventoryDataByIdx(int32 Index) const { return InventoryData[Index]; }
 	bool SaveInventoryData();
+	float GetInventoryWeight() const;
 
 private:
 	UGameInventory();
 	int32 FindEmptySlotIndex();
+	void ItemAddedBroadCast(EItemCategory Category, int32 ItemID);
 private:
 	static TObjectPtr<UGameInventory> Instance;
 	TArray<FDreamGameItemInstance> InventoryData;

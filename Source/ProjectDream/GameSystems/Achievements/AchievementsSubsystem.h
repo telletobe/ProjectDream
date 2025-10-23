@@ -24,24 +24,22 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
-	void AddProgress(FName Id, int32 Delta = 1);
-	void UnlockInstant(FName Id);
-	bool IsUnlocked(FName Id) const;
-	int32 GetProgress(FName Id) const;
+	//void AddProgress(FName Id, int32 Delta = 1);
+	//void UnlockInstant(FName Id);
+	//bool IsUnlocked(FName Id) const;
+	//int32 GetProgress(FName Id) const;
 	const FAchievementDef* GetAchievementDefById(const FName& EventId) const;
 	const FAchievementState* GetAchievementStateById(const FName& EventId) const;
 	const TMap <FName, FAchievementDef> GetAllAchievementDef();
 	const TMap<FName, FAchievementState> GetAllAchievementState();
-	void GetViewData(TArray<FAchievementViewData>& OutViewArr, TArray<FName>& OutIdsArr);
+	void GetAllViewData(TArray<FAchievementViewData>& OutViewArr, TArray<FName>& OutIdsArr);
 	void GetViewDataById(FAchievementViewData& OutView,const FName& EventId);
 	void RequestSave(const TMap<FName,FAchievementState>& StateData);
-	UFUNCTION()	void HandleAchieveEvent(FName EventId); // 현재 미사용
 private:
 	TMap<FName, FAchievementState> LoadNow();
 	void SaveNow(const TMap<FName, FAchievementState>& InStates);
 	void FlushPendingSave();
 	void LoadAchievementDef(TArray<FAchievementDef>& OutDefs) const;
-	bool UpdateAchieve(FName& EventId);
 	bool HandleAchivementEvent(FName& EventId); // 현재 미사용
 	void UpdateProgress(const FAchievementDef& OutDef, const FName& EventId);
 private:
@@ -74,7 +72,7 @@ namespace AchievementIDParse
 		bool bHasItemData = false;
 
 		EClearRule		Rule = EClearRule::EventNone;
-		EItemCategory	ItemCat = EItemCategory::Other;
+		EItemCategory	ItemCat = EItemCategory::None;
 		int32			ItemID = INDEX_NONE;
 	};
 
@@ -82,12 +80,9 @@ namespace AchievementIDParse
 	bool StringToAchievementType(const FString& S, EClearRule& Out);
 	// 디버깅 용
 	const TCHAR* ToString(EItemCategory Cat);
-	//----------------------------------------------
-	//코드 병합중...
-	bool ParseID(const FName& AchievementID, FParseResult& OutFParseReulst);
-	//-----------------------------------------------
 
-	bool ParseItemTypeAndId(const FName AchievementId, FParseResult& OutFParseReulst);
-	bool ParseAchievementType(const FName AchievementId, FParseResult& OutFParseReulst);
+	bool ParseID(const FName& AchievementID, FParseResult& OutFParseReulst);
+	bool ParseItemTypeAndId(const TArray<FString>& OutTokens, FParseResult& OutFParseReulst);
+	bool ParseAchievementType(const TArray<FString>& OutTokens, FParseResult& OutFParseReulst);
 	
 }

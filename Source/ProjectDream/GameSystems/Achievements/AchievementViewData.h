@@ -15,7 +15,7 @@ struct FAchievementViewData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) TObjectPtr<UTexture2D> Icon = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 TargetValue = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 Progress = 0;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite) bool  bUnlocked = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FDateTime  UnlockedTime = FDateTime::MaxValue();
 
 	bool operator== (const FAchievementViewData& Rhs);
 	FAchievementViewData() = default;
@@ -24,7 +24,7 @@ struct FAchievementViewData
 	//float GetPercent() const
 	//{
 	//	if (TargetValue > 0) { return FMath::Clamp((float)Progress / (float)TargetValue, 0.f, 1.f); }
-	//	return bUnlocked ? 1.f : 0.f;
+	//	return UnlockedTime ? 1.f : 0.f;
 	//}
 
 	FText GetProgressText() const
@@ -38,6 +38,6 @@ struct FAchievementViewData
 
 	FText GetStatusText() const
 	{
-		return bUnlocked ? FText::FromString(TEXT("완료")) : FText::FromString(TEXT("진행중"));
+		return UnlockedTime != FDateTime::MaxValue() ? FText::FromString(TEXT("완료")) : FText::FromString(TEXT("진행중"));
 	}
 };

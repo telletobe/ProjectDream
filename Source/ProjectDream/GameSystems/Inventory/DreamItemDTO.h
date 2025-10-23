@@ -14,6 +14,7 @@ enum class EItemCategory : int8
 	Equipment	UMETA(DisPlayName = "Equipment"), // need UID
 	Consumable	UMETA(DisplayName = "Consumable"),
 	Other		UMETA(DisplayName = "Other"),
+	None		UMETA(DisplayName = "None")
 };
 
 // 정의 데이터
@@ -28,6 +29,7 @@ public:
 	bool operator !=(const FDreamGameItemDef& Other) const;
 	int32 GetItemID() const { return ItemID; }
 	int32 GetMaxStackCnt() const { return MaxStackCnt; }
+	int32 GetItemWeight() const { return ItemWeight; }
 public:
 	UPROPERTY(EditAnywhere, Category = "Data")		 EItemCategory ItemCategory;
 	UPROPERTY(EditAnywhere, Category = "Data")		 FString ItemName;

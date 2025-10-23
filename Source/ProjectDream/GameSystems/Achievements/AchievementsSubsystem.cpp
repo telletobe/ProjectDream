@@ -15,8 +15,8 @@ static const FString AchievementsSlot = TEXT("Achievements");
 업적 정의데이터, 유저 상태 데이터 가져오기
 업적 유저상태에 따른 변경
 업적 갱신을 업적 아이디 뒤 _ 토큰으로 확인
-업적 ID 예시 : ID_ItemType_ItemID
-			  ID_AchievementType
+업적 ID 예시 : 업적ID_ItemType_ItemID
+			  업적ID_ClearRuleType
 */
 void UAchievementsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -83,12 +83,6 @@ const TMap<FName, FAchievementState> UAchievementsSubsystem::GetAllAchievementSt
 	return States;
 }
 
-void UAchievementsSubsystem::HandleAchieveEvent(FName EventId)
-{
-	UE_LOG(LogTemp, Warning, TEXT("HandleAchieveEvent Call"));
-
-}
-
 void UAchievementsSubsystem::RequestSave(const TMap<FName, FAchievementState>& StateData)
 {
 	PendingState = StateData;
@@ -106,15 +100,15 @@ void UAchievementsSubsystem::RequestSave(const TMap<FName, FAchievementState>& S
 		UE_LOG(LogTemp,Warning,TEXT("World가 존재하지않음."));
 	}
 }
-void UAchievementsSubsystem::GetViewData(TArray<FAchievementViewData>& OutViewArr, TArray<FName>& OutIdsArr)
+void UAchievementsSubsystem::GetAllViewData(TArray<FAchievementViewData>& OutViewArr, TArray<FName>& OutIdsArr)
 {
-	//view 업데이트 시 갱신 필요
 	if (ViewsCash.Num() != 0 && DefIdsCash.Num() != 0) {
 		OutViewArr = ViewsCash;
 		OutIdsArr = DefIdsCash;
 		return;
 	}
 
+	// View 새로 생성
 	for (const auto& Data : Definition)
 	{
 		FAchievementViewData ViewData;
@@ -127,17 +121,16 @@ void UAchievementsSubsystem::GetViewData(TArray<FAchievementViewData>& OutViewAr
 		if (AchievementState != nullptr)
 		{
 			ViewData.Progress = AchievementState->Progress;
-			ViewData.bUnlocked = (AchievementState->UnlockedTime != FDateTime::MaxValue()); // false
+			ViewData.UnlockedTime = AchievementState->UnlockedTime; // false
 		}
 		else
 		{
 			ViewData.Progress = 0;
-			ViewData.bUnlocked = false;
+			ViewData.UnlockedTime = FDateTime::MaxValue();
 		}
 		OutViewArr.Add(ViewData);
 		OutIdsArr.Add(AchievementID);
 		IdsByView.Add({AchievementID,ViewData});
-		UE_LOG(LogTemp,Warning,TEXT("잠금해제 bUnlocked : %d"), ViewData.bUnlocked);
 	}
 
 	if (ViewsCash.Num() <= 0 && DefIdsCash.Num() <= 0)
@@ -151,10 +144,6 @@ void UAchievementsSubsystem::GetViewData(TArray<FAchievementViewData>& OutViewAr
 void UAchievementsSubsystem::GetViewDataById(FAchievementViewData& OutView,const FName& EventId)
 {
 	if (IdsByView.Num() == 0) return;
-
-	FAchievementViewData ViewData;
-	//view 업데이트 시 갱신 필요
-
 	if (IdsByView.Find(EventId))
 	{
 		OutView = *IdsByView.Find(EventId);
@@ -176,27 +165,28 @@ void UAchievementsSubsystem::FlushPendingSave()
 	PendingState.Empty();
 }
 
-bool UAchievementsSubsystem::UpdateAchieve(FName& EventId)
-{
-	return true;
-}
-
-bool UAchievementsSubsystem::HandleAchivementEvent(FName& EventId)
-{
-	//// 현재 미사용 코드
+// 현재 미사용 코드
+bool UAchievementsSubsystem::HandleAchivementEvent(FName& EventId) // FParseResult& Result
+{	
 	AchievementIDParse::FParseResult Result;
 	AchievementIDParse::ParseID(EventId,Result);
 
 	if (!Result.bValid) return false;
 	if (Result.bHasClearRule)
 	{
-		HandleLogin();
+		if (Result.Rule == EClearRule::Login)
+		{
+			HandleLogin();
+		}
+		else if (Result.Rule == EClearRule::InventoryAdded)
+		{
+			HandleItemAdded(Result.ItemCat, Result.ItemID);
+		}
 	}
 	else if (Result.bHasItemData)
 	{
-		HandleItemAdded(Result.ItemCat,Result.ItemID);
+		HandleItemAdded(Result.ItemCat, Result.ItemID);
 	}
-
 	return false;
 }
 
@@ -217,15 +207,15 @@ void UAchievementsSubsystem::UpdateProgress(const FAchievementDef& OutDef,const 
 	if (OutDef.Target == State->Progress)
 	{
 		State->UnlockedTime = FDateTime::UtcNow();
-
 	}
-	// 진행 상황 저장 필요
+	// 진행 상황 save 필요
+	// 뷰 업데이트
 	if (FAchievementViewData* Data = IdsByView.Find(OutDef.Id))
 	{
 		Data->Progress++;
 		if (Data->TargetValue <= Data->Progress)
 		{
-			Data->bUnlocked = true;
+			Data->UnlockedTime = FDateTime::UtcNow();
 		}
 	}
 }
@@ -246,7 +236,9 @@ void UAchievementsSubsystem::HandleLogin()
 void UAchievementsSubsystem::HandleItemAdded(EItemCategory ItemCategory, int32 ItemID)
 {
 	TArray<FAchievementDef>* AchievementDef = DefsByEventType.Find(EClearRule::InventoryAdded);
+
 	if (!AchievementDef) return;
+	if (ItemCategory == EItemCategory::None) return;
 
 	for (const auto& Achievement : *AchievementDef)
 	{
@@ -258,17 +250,6 @@ void UAchievementsSubsystem::HandleItemAdded(EItemCategory ItemCategory, int32 I
 			UpdateProgress(Achievement, Achievement.Id);
 			OnAchievementUpdated.Broadcast(Achievement.Id);
 		}
-		/*if (AchievementIDParse::ParseItemTypeAndId(Achievement.Id, ParseCat, ItemId))
-		{
-			if (ParseCat != ItemCategory || ItemId != ItemID)
-			{
-				continue;
-			}
-			UpdateProgress(Achievement, Achievement.Id);
-			UE_LOG(LogTemp,Warning,TEXT(""));
-			OnAchievementUpdated.Broadcast(Achievement.Id);
-			return;
-		}*/
 	}
 	return;
 }
@@ -374,61 +355,45 @@ bool AchievementIDParse::ParseID(const FName& AchievementID, FParseResult& OutFP
 	else if (Tokens.Num() == 2)
 	{
 		// 업적ID_EClearRule
-		ParseAchievementType(AchievementID, OutFParseReulst);
-		return true;
+		if (ParseAchievementType(Tokens, OutFParseReulst)) return true;
+		
 	}
 	else if (Tokens.Num() == 3)
 	{
 		// 업적ID_EItemCategory_ItemID
-		ParseItemTypeAndId(AchievementID, OutFParseReulst);
-		return true;
+		if (ParseItemTypeAndId(Tokens, OutFParseReulst)) return true;
 	}
 	return false;
 }
 
 
-bool AchievementIDParse::ParseItemTypeAndId(const FName AchievementId, FParseResult& OutFParseReulst)
+bool AchievementIDParse::ParseItemTypeAndId(const TArray<FString>& OutTokens, FParseResult& OutFParseReulst)
 {
-	const FString S = AchievementId.ToString();
-	TArray<FString> Tokens;
-	S.ParseIntoArray(Tokens, TEXT("_"), true);
-	if (Tokens.Num() < 3) return false;
-
 	int32 Num = 0;
-	if (LexTryParseString<int32>(Num, *Tokens.Last()))
+	if (LexTryParseString<int32>(Num, *OutTokens.Last()))
 	{
 		OutFParseReulst.ItemID = Num;
 		OutFParseReulst.bHasItemData = true;
 
 		EItemCategory ItemCategory;
-		if (StringToItemType(Tokens[Tokens.Num() - 2], ItemCategory))
+		if (StringToItemType(OutTokens[OutTokens.Num() - 2], ItemCategory))
 		{
 			OutFParseReulst.ItemCat = ItemCategory;
 			OutFParseReulst.bValid = true;
 		}
-
 		return true;
 	}
 	return false;
 }
 
-bool AchievementIDParse::ParseAchievementType(const FName AchievementId, FParseResult& OutFParseReulst)
+bool AchievementIDParse::ParseAchievementType(const TArray<FString>& OutTokens, FParseResult& OutFParseReulst)
 {	
-	const FString S = AchievementId.ToString();
-	TArray<FString> Tokens;
-	S.ParseIntoArray(Tokens, TEXT("_"), true);
-	if (Tokens.Num() < 2)
-	{
-		return false;
-	}
-
 	EClearRule ClearRuleType;
-	if (StringToAchievementType(Tokens[Tokens.Num() - 1], ClearRuleType))
+	if (StringToAchievementType(OutTokens[OutTokens.Num() - 1], ClearRuleType))
 	{
 		OutFParseReulst.Rule = ClearRuleType;
 		OutFParseReulst.bHasClearRule = true;
 		OutFParseReulst.bValid = true;
 	}
 	return true;
-	
 }

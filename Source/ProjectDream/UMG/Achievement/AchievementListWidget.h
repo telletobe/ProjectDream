@@ -19,7 +19,5 @@ private:
 	void RefreshAll();
 	UFUNCTION()	void UpdateAchieveEntry(const FName EventId);
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<class UListView> AchieveList;
-	//void BulidList();
-
 	UPROPERTY() TMap<FName, UAchieveViewWrapper*> IdToItem;
 };
