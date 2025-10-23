@@ -108,8 +108,7 @@ void UAchievementsSubsystem::RequestSave(const TMap<FName, FAchievementState>& S
 }
 void UAchievementsSubsystem::GetViewData(TArray<FAchievementViewData>& OutViewArr, TArray<FName>& OutIdsArr)
 {
-	FAchievementViewData ViewData;
-
+	//view 업데이트 시 갱신 필요
 	if (ViewsCash.Num() != 0 && DefIdsCash.Num() != 0) {
 		OutViewArr = ViewsCash;
 		OutIdsArr = DefIdsCash;
@@ -118,6 +117,7 @@ void UAchievementsSubsystem::GetViewData(TArray<FAchievementViewData>& OutViewAr
 
 	for (const auto& Data : Definition)
 	{
+		FAchievementViewData ViewData;
 		const FName& AchievementID = Data.Value.Id;
 		const FAchievementState* AchievementState = GetAchievementStateById(AchievementID);
 
@@ -127,7 +127,7 @@ void UAchievementsSubsystem::GetViewData(TArray<FAchievementViewData>& OutViewAr
 		if (AchievementState != nullptr)
 		{
 			ViewData.Progress = AchievementState->Progress;
-			ViewData.bUnlocked = (AchievementState->UnlockedTime != FDateTime::MaxValue());
+			ViewData.bUnlocked = (AchievementState->UnlockedTime != FDateTime::MaxValue()); // false
 		}
 		else
 		{
@@ -137,6 +137,7 @@ void UAchievementsSubsystem::GetViewData(TArray<FAchievementViewData>& OutViewAr
 		OutViewArr.Add(ViewData);
 		OutIdsArr.Add(AchievementID);
 		IdsByView.Add({AchievementID,ViewData});
+		UE_LOG(LogTemp,Warning,TEXT("잠금해제 bUnlocked : %d"), ViewData.bUnlocked);
 	}
 
 	if (ViewsCash.Num() <= 0 && DefIdsCash.Num() <= 0)
@@ -180,56 +181,49 @@ bool UAchievementsSubsystem::UpdateAchieve(FName& EventId)
 	return true;
 }
 
-bool UAchievementsSubsystem::HandleProgressEvent(FName& EventId, const FAchievementDef& OutDef, FAchievementState& OutState)
+bool UAchievementsSubsystem::HandleAchivementEvent(FName& EventId)
 {
 	//// 현재 미사용 코드
-	//if (OutDef.Target >= OutState.Progress && OutState.UnlockedTime != FDateTime::MaxValue()) // 업적 클리어 전
-	//{
-	//	UpdateProgress(EventId);
+	AchievementIDParse::FParseResult Result;
+	AchievementIDParse::ParseID(EventId,Result);
 
-	//	if (OutDef.Target <= OutState.Progress)
-	//	{
-	//		if (UpdateAchieve(EventId))
-	//		{
-	//			UE_LOG(LogTemp, Warning, TEXT("업적 클리어"));
-	//			return true;				
-	//		}
-	//		else
-	//		{
-	//			UE_LOG(LogTemp, Warning, TEXT("누적 정보를 저장하였습니다."));
-	//			return true;
-	//		}
-	//	}
-	//	return true;
-	//}
-	//else // 이미 클리어 됀 후. 저장을 하지않거나 누적 상황 별도 갱신
-	//{
-	//	if (UpdateProgress(EventId))
-	//	{
-	//		UE_LOG(LogTemp, Warning, TEXT("누적정보 세이브 완료"));
-	//		return true;
-	//	}
-	//}
+	if (!Result.bValid) return false;
+	if (Result.bHasClearRule)
+	{
+		HandleLogin();
+	}
+	else if (Result.bHasItemData)
+	{
+		HandleItemAdded(Result.ItemCat,Result.ItemID);
+	}
 
 	return false;
 }
 
-void UAchievementsSubsystem::UpdateProgress(const FAchievementDef& Def,const FName& EventId)
+void UAchievementsSubsystem::UpdateProgress(const FAchievementDef& OutDef,const FName& EventId)
 {
 	FAchievementState* State = States.Find(EventId);
 
 	if (!State) return;
 
+	if (OutDef.AchieveType == EAchievementType::Instant)
+	{
+		State->Progress++;
+		State->UnlockedTime = FDateTime::UtcNow();
+		return;
+	}
+
 	State->Progress++;
-	if (Def.Target == State->Progress)
+	if (OutDef.Target == State->Progress)
 	{
 		State->UnlockedTime = FDateTime::UtcNow();
+
 	}
 	// 진행 상황 저장 필요
-	if (FAchievementViewData* Data = IdsByView.Find(Def.Id))
+	if (FAchievementViewData* Data = IdsByView.Find(OutDef.Id))
 	{
 		Data->Progress++;
-		if (Data->TargetValue >= Data->Progress)
+		if (Data->TargetValue <= Data->Progress)
 		{
 			Data->bUnlocked = true;
 		}
@@ -238,11 +232,8 @@ void UAchievementsSubsystem::UpdateProgress(const FAchievementDef& Def,const FNa
 
 void UAchievementsSubsystem::HandleLogin()
 {
-	TArray<FAchievementDef>* AchievementDef = DefsByEventType.Find(EGameEventType::Login);
+	TArray<FAchievementDef>* AchievementDef = DefsByEventType.Find(EClearRule::Login);
 	if (!AchievementDef) return;
-
-	EGameEventType EventType = EGameEventType::EventNone;
-	FName AchieveID;
 
 	for (const auto& Achievement : *AchievementDef)
 	{
@@ -254,16 +245,20 @@ void UAchievementsSubsystem::HandleLogin()
 
 void UAchievementsSubsystem::HandleItemAdded(EItemCategory ItemCategory, int32 ItemID)
 {
-	TArray<FAchievementDef>* AchievementDef = DefsByEventType.Find(EGameEventType::InventoryAdded);
+	TArray<FAchievementDef>* AchievementDef = DefsByEventType.Find(EClearRule::InventoryAdded);
 	if (!AchievementDef) return;
-
-	EItemCategory ParseCat = EItemCategory::Other;
-	int32 ItemId = -1;
-	//FName AchieveID;
 
 	for (const auto& Achievement : *AchievementDef)
 	{
-		if (AchIdParse::ParseItemTypeAndId(Achievement.Id, ParseCat, ItemId))
+		AchievementIDParse::FParseResult Result;
+		if (AchievementIDParse::ParseID(Achievement.Id, Result))
+		{
+			if (!Result.bValid || !Result.bHasItemData) return;
+			if (ItemCategory != Result.ItemCat || ItemID != Result.ItemID)  continue;
+			UpdateProgress(Achievement, Achievement.Id);
+			OnAchievementUpdated.Broadcast(Achievement.Id);
+		}
+		/*if (AchievementIDParse::ParseItemTypeAndId(Achievement.Id, ParseCat, ItemId))
 		{
 			if (ParseCat != ItemCategory || ItemId != ItemID)
 			{
@@ -273,7 +268,7 @@ void UAchievementsSubsystem::HandleItemAdded(EItemCategory ItemCategory, int32 I
 			UE_LOG(LogTemp,Warning,TEXT(""));
 			OnAchievementUpdated.Broadcast(Achievement.Id);
 			return;
-		}
+		}*/
 	}
 	return;
 }
@@ -316,4 +311,124 @@ TMap<FName, FAchievementState> UAchievementsSubsystem::LoadNow()
 		}
 	}
 	return Out;
+}
+
+bool AchievementIDParse::StringToItemType(const FString& S, EItemCategory& Out)
+{
+	if (S.Equals(TEXT("Equipment"), ESearchCase::IgnoreCase))
+	{
+		Out = EItemCategory::Equipment;
+		return true;
+	}
+	if (S.Equals(TEXT("Consumable"), ESearchCase::IgnoreCase))
+	{
+		Out = EItemCategory::Consumable;
+		return true;
+	}
+	if (S.Equals(TEXT("Other"), ESearchCase::IgnoreCase))
+	{
+		Out = EItemCategory::Other;
+		return true;
+	}
+	return false;
+}
+
+bool AchievementIDParse::StringToAchievementType(const FString& S, EClearRule& Out)
+{
+	if (S.Equals(TEXT("Login")))
+	{
+		Out = EClearRule::Login;
+		return true;
+	}
+	if (S.Equals(TEXT("InventoryAdded")))
+	{
+		Out = EClearRule::InventoryAdded;
+		return true;
+	}
+	return false;
+}
+
+// 디버깅 용
+const TCHAR* AchievementIDParse::ToString(EItemCategory Cat)
+{
+	switch (Cat)
+	{
+	case EItemCategory::Equipment:  return TEXT("Equipment");
+	case EItemCategory::Consumable: return TEXT("Consumable");
+	case EItemCategory::Other:      return TEXT("Other");
+	default:                        return TEXT("Unknown");
+	}
+}
+
+bool AchievementIDParse::ParseID(const FName& AchievementID, FParseResult& OutFParseReulst)
+{
+	const FString S = AchievementID.ToString();
+	TArray<FString> Tokens;
+	S.ParseIntoArray(Tokens, TEXT("_"), true);
+
+	if (Tokens.Num() == 1)
+	{
+		// 현재 업적 해당사항 없음.
+		return false;
+	}
+	else if (Tokens.Num() == 2)
+	{
+		// 업적ID_EClearRule
+		ParseAchievementType(AchievementID, OutFParseReulst);
+		return true;
+	}
+	else if (Tokens.Num() == 3)
+	{
+		// 업적ID_EItemCategory_ItemID
+		ParseItemTypeAndId(AchievementID, OutFParseReulst);
+		return true;
+	}
+	return false;
+}
+
+
+bool AchievementIDParse::ParseItemTypeAndId(const FName AchievementId, FParseResult& OutFParseReulst)
+{
+	const FString S = AchievementId.ToString();
+	TArray<FString> Tokens;
+	S.ParseIntoArray(Tokens, TEXT("_"), true);
+	if (Tokens.Num() < 3) return false;
+
+	int32 Num = 0;
+	if (LexTryParseString<int32>(Num, *Tokens.Last()))
+	{
+		OutFParseReulst.ItemID = Num;
+		OutFParseReulst.bHasItemData = true;
+
+		EItemCategory ItemCategory;
+		if (StringToItemType(Tokens[Tokens.Num() - 2], ItemCategory))
+		{
+			OutFParseReulst.ItemCat = ItemCategory;
+			OutFParseReulst.bValid = true;
+		}
+
+		return true;
+	}
+	return false;
+}
+
+bool AchievementIDParse::ParseAchievementType(const FName AchievementId, FParseResult& OutFParseReulst)
+{	
+	const FString S = AchievementId.ToString();
+	TArray<FString> Tokens;
+	S.ParseIntoArray(Tokens, TEXT("_"), true);
+	if (Tokens.Num() < 2)
+	{
+		return false;
+	}
+
+	EClearRule ClearRuleType;
+	if (StringToAchievementType(Tokens[Tokens.Num() - 1], ClearRuleType))
+	{
+		OutFParseReulst.Rule = ClearRuleType;
+		OutFParseReulst.bHasClearRule = true;
+		OutFParseReulst.bValid = true;
+	}
+	return true;
+	
 }

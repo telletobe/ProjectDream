@@ -42,8 +42,8 @@ private:
 	void FlushPendingSave();
 	void LoadAchievementDef(TArray<FAchievementDef>& OutDefs) const;
 	bool UpdateAchieve(FName& EventId);
-	bool HandleProgressEvent(FName& EventId, const FAchievementDef& OutDef, FAchievementState& OutState); // 현재 미사용
-	void UpdateProgress(const FAchievementDef& Def, const FName& EventId);
+	bool HandleAchivementEvent(FName& EventId); // 현재 미사용
+	void UpdateProgress(const FAchievementDef& OutDef, const FName& EventId);
 private:
 	void HandleLogin();
 	UFUNCTION()	void HandleItemAdded(EItemCategory ItemCategory, int32 ItemID);
@@ -55,7 +55,7 @@ private:
 	float SaveDelay = 2.0f;
 
 	TMap <FName, FAchievementDef> Definition;
-	TMap<EGameEventType, TArray<FAchievementDef>> DefsByEventType;
+	TMap<EClearRule, TArray<FAchievementDef>> DefsByEventType;
 	//
 	TArray<FAchievementViewData> ViewsCash;
 	TArray<FName> DefIdsCash;
@@ -65,87 +65,29 @@ private:
 
 };
 
-namespace AchIdParse
+namespace AchievementIDParse
 {
-	static bool StringToItemType(const FString& S, EItemCategory& Out)
+	struct FParseResult
 	{
-		if (S.Equals(TEXT("Equipment"), ESearchCase::IgnoreCase))
-		{
-			Out = EItemCategory::Equipment;
-			return true;
-		}
-		if (S.Equals(TEXT("Consumable"), ESearchCase::IgnoreCase))
-		{
-			Out = EItemCategory::Consumable;
-			return true;
-		}
-		if (S.Equals(TEXT("Other"), ESearchCase::IgnoreCase))
-		{
-			Out = EItemCategory::Other;
-			return true;
-		}
-		return false;
-	} 
+		bool bValid = false;
+		bool bHasClearRule = false;
+		bool bHasItemData = false;
 
-	static bool StringToAchievementType(const FString& S, EGameEventType& Out)
-	{
-		if (S.Equals(TEXT("Login")))
-		{
-			Out = EGameEventType::Login;
-			return true;
-		}
-		if (S.Equals(TEXT("InventoryAdded")))
-		{
-			Out = EGameEventType::InventoryAdded;
-			return true;
-		}
-		return false;
-	}
+		EClearRule		Rule = EClearRule::EventNone;
+		EItemCategory	ItemCat = EItemCategory::Other;
+		int32			ItemID = INDEX_NONE;
+	};
 
-	static bool ParseItemTypeAndId(const FName AchievementId, EItemCategory& OutType, int32& OutItemId)
-	{
-		const FString S = AchievementId.ToString();
-		TArray<FString> Tokens;
-		S.ParseIntoArray(Tokens, TEXT("_"), true);
-		if (Tokens.Num() < 3) return false;
+	bool StringToItemType(const FString& S, EItemCategory& Out);
+	bool StringToAchievementType(const FString& S, EClearRule& Out);
+	// 디버깅 용
+	const TCHAR* ToString(EItemCategory Cat);
+	//----------------------------------------------
+	//코드 병합중...
+	bool ParseID(const FName& AchievementID, FParseResult& OutFParseReulst);
+	//-----------------------------------------------
 
-		int32 Num = 0;
-		if (LexTryParseString<int32>(Num, *Tokens.Last()))
-		{
-			OutItemId = Num;
-			
-			EItemCategory ItemCategory;
-			if (StringToItemType(Tokens[Tokens.Num() - 2], ItemCategory)) OutType = ItemCategory;
-			
-			return true;
-		}
-		return false;		
-	}
-
-	static bool ParseAchievementType(const FName AchievementId, EGameEventType& OutType)
-	{
-		const FString S = AchievementId.ToString();
-		TArray<FString> Tokens;
-		S.ParseIntoArray(Tokens, TEXT("_"), true);
-		if (Tokens.Num() < 2)
-		{
-			return false;
-		}
-
-		EGameEventType GameEventType;
-		if (StringToAchievementType(Tokens[Tokens.Num() - 1], GameEventType)) OutType = GameEventType;
-		return true;
-	}
-
-	static const TCHAR* ToString(EItemCategory Cat)
-	{
-		switch (Cat)
-		{
-		case EItemCategory::Equipment:  return TEXT("Equipment");
-		case EItemCategory::Consumable: return TEXT("Consumable");
-		case EItemCategory::Other:      return TEXT("Other");
-		default:                        return TEXT("Unknown");
-		}
-	}
-
+	bool ParseItemTypeAndId(const FName AchievementId, FParseResult& OutFParseReulst);
+	bool ParseAchievementType(const FName AchievementId, FParseResult& OutFParseReulst);
+	
 }

@@ -13,7 +13,7 @@ enum class EItemCategory : int8
 {
 	Equipment	UMETA(DisPlayName = "Equipment"), // need UID
 	Consumable	UMETA(DisplayName = "Consumable"),
-	Other		UMETA(DisplayName = "Other")
+	Other		UMETA(DisplayName = "Other"),
 };
 
 // 정의 데이터

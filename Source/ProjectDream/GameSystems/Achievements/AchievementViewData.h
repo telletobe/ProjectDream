@@ -21,11 +21,11 @@ struct FAchievementViewData
 	FAchievementViewData() = default;
 
 	// 계산 필드(편의)
-	float GetPercent() const
-	{
-		if (TargetValue > 0) { return FMath::Clamp((float)Progress / (float)TargetValue, 0.f, 1.f); }
-		return bUnlocked ? 1.f : 0.f;
-	}
+	//float GetPercent() const
+	//{
+	//	if (TargetValue > 0) { return FMath::Clamp((float)Progress / (float)TargetValue, 0.f, 1.f); }
+	//	return bUnlocked ? 1.f : 0.f;
+	//}
 
 	FText GetProgressText() const
 	{

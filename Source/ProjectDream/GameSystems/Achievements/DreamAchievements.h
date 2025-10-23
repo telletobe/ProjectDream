@@ -14,7 +14,7 @@ enum class EAchievementType : uint8
 };
 
 UENUM(BlueprintType)
-enum class EGameEventType : uint8
+enum class EClearRule : uint8
 {
 	Login,
 	InventoryAdded,
@@ -30,7 +30,7 @@ struct FAchievementDef
 	// 업적을 코드/데이터상에서 구분
 	UPROPERTY(EditAnywhere, BlueprintReadOnly) FName Id = NAME_None; 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly) EAchievementType AchieveType = EAchievementType::Instant;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly) EGameEventType EventType = EGameEventType::Login;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly) EClearRule EventType = EClearRule::Login;
 
 	//즉시형이면 값 무시 혹은 0 유지
 	// 업적이 누적용일 경우. ex) 킬 카운트
