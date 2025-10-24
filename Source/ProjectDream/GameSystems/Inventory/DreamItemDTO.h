@@ -29,7 +29,7 @@ public:
 	bool operator !=(const FDreamGameItemDef& Other) const;
 	int32 GetItemID() const { return ItemID; }
 	int32 GetMaxStackCnt() const { return MaxStackCnt; }
-	int32 GetItemWeight() const { return ItemWeight; }
+	float GetItemWeight() const { return ItemWeight; }
 public:
 	UPROPERTY(EditAnywhere, Category = "Data")		 EItemCategory ItemCategory;
 	UPROPERTY(EditAnywhere, Category = "Data")		 FString ItemName;

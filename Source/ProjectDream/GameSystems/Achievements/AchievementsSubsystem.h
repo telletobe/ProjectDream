@@ -35,6 +35,7 @@ public:
 	void GetAllViewData(TArray<FAchievementViewData>& OutViewArr, TArray<FName>& OutIdsArr);
 	void GetViewDataById(FAchievementViewData& OutView,const FName& EventId);
 	void RequestSave(const TMap<FName,FAchievementState>& StateData);
+	UFUNCTION()	void OutHandleItemAdded(EItemCategory ItemCategory, int32 ItemID);
 private:
 	TMap<FName, FAchievementState> LoadNow();
 	void SaveNow(const TMap<FName, FAchievementState>& InStates);
@@ -44,7 +45,7 @@ private:
 	void UpdateProgress(const FAchievementDef& OutDef, const FName& EventId);
 private:
 	void HandleLogin();
-	UFUNCTION()	void HandleItemAdded(EItemCategory ItemCategory, int32 ItemID);
+	void InHandleItemAdded(EItemCategory ItemCategory, int32 ItemID);
 private:
 	UPROPERTY(EditAnywhere, config, Category = "Achievements")
 	TSoftObjectPtr<class UDreamAchievements> AchievementData;

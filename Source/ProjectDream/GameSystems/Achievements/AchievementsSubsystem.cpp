@@ -16,7 +16,7 @@ static const FString AchievementsSlot = TEXT("Achievements");
 업적 유저상태에 따른 변경
 업적 갱신을 업적 아이디 뒤 _ 토큰으로 확인
 업적 ID 예시 : 업적ID_ItemType_ItemID
-			  업적ID_ClearRuleType
+			   업적ID_ClearRuleType
 */
 void UAchievementsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -39,7 +39,7 @@ void UAchievementsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 	if (UGameInventory* Inv = UGameInventory::Get())
 	{
-		Inv->OnItemAdded.AddDynamic(this, &UAchievementsSubsystem::HandleItemAdded);
+		Inv->OnItemAdded.AddDynamic(this, &UAchievementsSubsystem::OutHandleItemAdded);
 	}
 	HandleLogin();
 }
@@ -100,6 +100,7 @@ void UAchievementsSubsystem::RequestSave(const TMap<FName, FAchievementState>& S
 		UE_LOG(LogTemp,Warning,TEXT("World가 존재하지않음."));
 	}
 }
+
 void UAchievementsSubsystem::GetAllViewData(TArray<FAchievementViewData>& OutViewArr, TArray<FName>& OutIdsArr)
 {
 	if (ViewsCash.Num() != 0 && DefIdsCash.Num() != 0) {
@@ -165,8 +166,7 @@ void UAchievementsSubsystem::FlushPendingSave()
 	PendingState.Empty();
 }
 
-// 현재 미사용 코드
-bool UAchievementsSubsystem::HandleAchivementEvent(FName& EventId) // FParseResult& Result
+bool UAchievementsSubsystem::HandleAchivementEvent(FName& EventId)
 {	
 	AchievementIDParse::FParseResult Result;
 	AchievementIDParse::ParseID(EventId,Result);
@@ -180,12 +180,12 @@ bool UAchievementsSubsystem::HandleAchivementEvent(FName& EventId) // FParseResu
 		}
 		else if (Result.Rule == EClearRule::InventoryAdded)
 		{
-			HandleItemAdded(Result.ItemCat, Result.ItemID);
+			InHandleItemAdded(Result.ItemCat, Result.ItemID);
 		}
 	}
 	else if (Result.bHasItemData)
 	{
-		HandleItemAdded(Result.ItemCat, Result.ItemID);
+		InHandleItemAdded(Result.ItemCat, Result.ItemID);
 	}
 	return false;
 }
@@ -233,8 +233,8 @@ void UAchievementsSubsystem::HandleLogin()
 	}
 }
 
-void UAchievementsSubsystem::HandleItemAdded(EItemCategory ItemCategory, int32 ItemID)
-{
+void UAchievementsSubsystem::InHandleItemAdded(EItemCategory ItemCategory, int32 ItemID)
+{	
 	TArray<FAchievementDef>* AchievementDef = DefsByEventType.Find(EClearRule::InventoryAdded);
 
 	if (!AchievementDef) return;
@@ -251,7 +251,12 @@ void UAchievementsSubsystem::HandleItemAdded(EItemCategory ItemCategory, int32 I
 			OnAchievementUpdated.Broadcast(Achievement.Id);
 		}
 	}
-	return;
+}
+
+void UAchievementsSubsystem::OutHandleItemAdded(EItemCategory ItemCategory, int32 ItemID)
+{
+	FName ResultID(*FString::Printf(TEXT("ItemAdded_%s_%d"), AchievementIDParse::ToString(ItemCategory), ItemID));
+	HandleAchivementEvent(ResultID);
 }
 
 void UAchievementsSubsystem::SaveNow(const TMap<FName, FAchievementState>& InStates)
@@ -356,7 +361,6 @@ bool AchievementIDParse::ParseID(const FName& AchievementID, FParseResult& OutFP
 	{
 		// 업적ID_EClearRule
 		if (ParseAchievementType(Tokens, OutFParseReulst)) return true;
-		
 	}
 	else if (Tokens.Num() == 3)
 	{
