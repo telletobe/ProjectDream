@@ -4,6 +4,7 @@
 #include "UMG/Achievement/AchievementEntryWidget.h"
 #include "../GameSystems/Achievements/AchieveViewWrapper.h"
 #include "Components/TextBlock.h"
+#include "Components/Border.h"
 #include "Components/ProgressBar.h"
 
 void UAchievementEntryWidget::NativeOnListItemObjectSet(UObject* ListItemObject)
@@ -16,6 +17,7 @@ void UAchievementEntryWidget::NativeOnListItemObjectSet(UObject* ListItemObject)
 		UE_LOG(LogTemp,Warning,TEXT("Entry ItemProgress : %d"),Item.Progress);
 	}
 	SyncFromItem();
+
 }
 
 void UAchievementEntryWidget::SyncFromItem()
@@ -49,6 +51,13 @@ void UAchievementEntryWidget::SyncFromItem()
 			AchieveClear->SetPercent(1.0f);
 		}
 	}
+	if (Item.bShowRedDot)
+	{
+		if (RedDot)
+		{
+			RedDot->SetVisibility(ESlateVisibility::Visible);
+		}
+	}
 }
 
 void UAchievementEntryWidget::SetViewItem(FAchievementViewData* ViewItem)
@@ -56,6 +65,15 @@ void UAchievementEntryWidget::SetViewItem(FAchievementViewData* ViewItem)
 	Item = *ViewItem;
 }
 
+void UAchievementEntryWidget::OffRedDot()
+{
+	UE_LOG(LogTemp,Warning,TEXT("Call OffRedDot"));
+	Item.bShowRedDot = false;
+	if (RedDot)
+	{
+		RedDot->SetVisibility(ESlateVisibility::Hidden);
+	}
+}
 
 void UAchievementEntryWidget::UpdateProgress()
 {

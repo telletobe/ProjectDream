@@ -16,7 +16,7 @@ struct FAchievementViewData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 TargetValue = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 Progress = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FDateTime  UnlockedTime = FDateTime::MaxValue();
-
+	UPROPERTY(Transient) bool bShowRedDot = false;
 	bool operator== (const FAchievementViewData& Rhs);
 	FAchievementViewData() = default;
 

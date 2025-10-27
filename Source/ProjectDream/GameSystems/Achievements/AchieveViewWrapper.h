@@ -14,10 +14,9 @@ UCLASS()
 class PROJECTDREAM_API UAchieveViewWrapper : public UObject
 {
 	GENERATED_BODY()
-	
-public:
 
 public:
-	UPROPERTY()
-	FAchievementViewData Data;	
+	void TestRedDot();
+public:
+	UPROPERTY()	FAchievementViewData Data;	
 };

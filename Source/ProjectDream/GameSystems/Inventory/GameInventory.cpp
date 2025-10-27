@@ -91,7 +91,8 @@ UGameInventory* UGameInventory::Get()
 	return Instance;
 }
 
-bool UGameInventory::AddToInventory(TPair<int32, EItemCategory> NewItmeKeyPair, UWorld* CurrentWorld)
+// 현재 아이템은 1개씩만 들어온다고 가정, Qty는 활용하지않음.
+bool UGameInventory::AddToInventory(TPair<int32, EItemCategory> NewItmeKeyPair, UWorld* CurrentWorld, int32 NewItemQty)
 {
 	int32 EmptySlot = FindEmptySlotIndex();
 	if (EmptySlot == INDEX_NONE) 

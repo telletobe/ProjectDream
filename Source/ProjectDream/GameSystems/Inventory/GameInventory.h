@@ -20,7 +20,7 @@ public:
 public :
 	static UGameInventory* Get();
 	bool Init(int32 InvSize = 30);
-	bool AddToInventory(TPair<int32,EItemCategory> NewItmeKeyPair,UWorld* CurrentWorld);
+	bool AddToInventory(TPair<int32,EItemCategory> NewItmeKeyPair,UWorld* CurrentWorld, int32 NewItemQty = 1);
 	bool SetInventoryData(TArray<FDreamGameItemInstance> LoadData);
 	int32 GetInventorySize() const { return InventoryData.Num(); }
 	TArray<FDreamGameItemInstance> GetInventoryData() const { return InventoryData; }

@@ -48,6 +48,18 @@ struct FAchievementState
 	FName Id = NAME_None;
 	int32 Progress = 0;
 	FDateTime UnlockedTime = FDateTime::MaxValue();
+public:
+	int32 GetRevision() const { return Revision; }
+	inline void AddRevision() { Revision++; }
+private:
+	int32 Revision = 0;
+};
+
+USTRUCT(BlueprintType)
+struct FAchievementSeen
+{
+	GENERATED_BODY()
+	int32 SeenRevision = 0;
 };
 
 UCLASS()
@@ -59,3 +71,4 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TArray<FAchievementDef> AchievementList;
 };
+

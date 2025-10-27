@@ -27,5 +27,4 @@ public:
 private:
 	TMap<int32,TMap<EItemCategory,FDreamGameItemDef>> ItemsCatalog;
 	TObjectPtr<UGameInventory> PlayerInventory = nullptr;
-	
 };

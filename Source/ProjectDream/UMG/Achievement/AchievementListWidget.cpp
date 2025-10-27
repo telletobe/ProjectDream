@@ -10,11 +10,21 @@
 
 void UAchievementListWidget::NativeConstruct()
 {
+	Super::NativeConstruct();
 	if (UGameInstance* GI = GetGameInstance())
 	{
 		if (auto* SubSys = GI->GetSubsystem<UAchievementsSubsystem>())
 		{
 			SubSys->OnAchievementUpdated.AddUniqueDynamic(this, &UAchievementListWidget::UpdateAchieveEntry);
+		}
+	}
+
+	if (AchieveList)
+	{
+		AchieveList->OnItemClicked().AddUObject(this, &UAchievementListWidget::HandleItemClicked);
+		if (AchieveList->OnItemClicked().IsBound())
+		{
+			UE_LOG(LogTemp,Warning,TEXT("AchieveList의 바인딩이 완료됌"));
 		}
 	}
 
@@ -27,6 +37,7 @@ void UAchievementListWidget::NativeConstruct()
 			Player->OnAchievementEvent.AddUniqueDynamic(this, &UAchievementListWidget::OnOffUI);	
 		}
 	}
+
 	RefreshAll();
 }
 
@@ -40,7 +51,7 @@ void UAchievementListWidget::OnOffUI()
 		break;
 	case ESlateVisibility::Collapsed:
 		break;
-	case ESlateVisibility::Hidden:
+	case ESlateVisibility::Hidden:	
 		SetVisibility(ESlateVisibility::Visible);
 		break;
 	case ESlateVisibility::HitTestInvisible:
@@ -107,6 +118,7 @@ void UAchievementListWidget::UpdateAchieveEntry(const FName EventId)
 			{
 				Entry->SetViewItem(&View);
 				Entry->SyncFromItem();	
+				
 			}
 		}
 	}
@@ -115,4 +127,18 @@ void UAchievementListWidget::UpdateAchieveEntry(const FName EventId)
 		UE_LOG(LogTemp, Warning, TEXT("UpdateAchieveEntry null"));
 		return;
 	}
+}
+
+//TestCode
+void UAchievementListWidget::HandleItemClicked(UObject* Item)
+{
+	UE_LOG(LogTemp, Warning, TEXT("call Handle ItemClick"));
+	if (UUserWidget* EntryWidget = AchieveList->GetEntryWidgetFromItem(Item))
+	{
+		if (UAchievementEntryWidget* Entry = Cast<UAchievementEntryWidget>(EntryWidget))
+		{
+			Entry->OffRedDot();
+		}
+	}
+
 }

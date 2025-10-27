@@ -20,4 +20,6 @@ private:
 	UFUNCTION()	void UpdateAchieveEntry(const FName EventId);
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<class UListView> AchieveList;
 	UPROPERTY() TMap<FName, UAchieveViewWrapper*> IdToItem;
+	//---------------------------------------------------------------
+	UFUNCTION() void HandleItemClicked(UObject* Item);
 };

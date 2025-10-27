@@ -24,10 +24,6 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
-	//void AddProgress(FName Id, int32 Delta = 1);
-	//void UnlockInstant(FName Id);
-	//bool IsUnlocked(FName Id) const;
-	//int32 GetProgress(FName Id) const;
 	const FAchievementDef* GetAchievementDefById(const FName& EventId) const;
 	const FAchievementState* GetAchievementStateById(const FName& EventId) const;
 	const TMap <FName, FAchievementDef> GetAllAchievementDef();
@@ -35,17 +31,18 @@ public:
 	void GetAllViewData(TArray<FAchievementViewData>& OutViewArr, TArray<FName>& OutIdsArr);
 	void GetViewDataById(FAchievementViewData& OutView,const FName& EventId);
 	void RequestSave(const TMap<FName,FAchievementState>& StateData);
-	UFUNCTION()	void OutHandleItemAdded(EItemCategory ItemCategory, int32 ItemID);
+	UFUNCTION()	void DispatchAchivementEvent(EItemCategory ItemCategory, int32 ItemID);
 private:
+	void UpdateView(FAchievementViewData& OutViewData);
+	void UpdateState(FAchievementState& OutStateData, const FAchievementDef& OutDef);
 	TMap<FName, FAchievementState> LoadNow();
 	void SaveNow(const TMap<FName, FAchievementState>& InStates);
 	void FlushPendingSave();
-	void LoadAchievementDef(TArray<FAchievementDef>& OutDefs) const;
-	bool HandleAchivementEvent(FName& EventId); // 현재 미사용
 	void UpdateProgress(const FAchievementDef& OutDef, const FName& EventId);
-private:
+	void LoadAchievementDef(TArray<FAchievementDef>& OutDefs) const;
+	bool HandleAchivementEvent(FName& EventId);
 	void HandleLogin();
-	void InHandleItemAdded(EItemCategory ItemCategory, int32 ItemID);
+	void HandleItemAdded(EItemCategory ItemCategory, int32 ItemID);
 private:
 	UPROPERTY(EditAnywhere, config, Category = "Achievements")
 	TSoftObjectPtr<class UDreamAchievements> AchievementData;
@@ -55,13 +52,10 @@ private:
 
 	TMap <FName, FAchievementDef> Definition;
 	TMap<EClearRule, TArray<FAchievementDef>> DefsByEventType;
-	//
-	TArray<FAchievementViewData> ViewsCash;
-	TArray<FName> DefIdsCash;
 	TMap<FName, FAchievementViewData> IdsByView;
-	//
 	UPROPERTY() TMap<FName, FAchievementState> States;
 
+	TMap<FName, FAchievementSeen> SeenMap; 
 };
 
 namespace AchievementIDParse
@@ -78,7 +72,7 @@ namespace AchievementIDParse
 	};
 
 	bool StringToItemType(const FString& S, EItemCategory& Out);
-	bool StringToAchievementType(const FString& S, EClearRule& Out);
+	bool CompareEClearType(const FString& S, EClearRule& Out);
 	// 디버깅 용
 	const TCHAR* ToString(EItemCategory Cat);
 

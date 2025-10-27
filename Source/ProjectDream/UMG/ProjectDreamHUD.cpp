@@ -24,9 +24,6 @@ void AProjectDreamHUD::BeginPlay()
 	for (const TSubclassOf<UUserWidget>& WidgetClass : Widgets)
 	{
 		if (!WidgetClass) continue;
-		
-		UE_LOG(LogHUD, Warning, TEXT("Call BeginPlay"));
-
 		UUserWidget* NewWidget = CreateWidget<UUserWidget>(PC,WidgetClass);		
 		NewWidget->AddToViewport();
 		NewWidget->SetVisibility(ESlateVisibility::Hidden);

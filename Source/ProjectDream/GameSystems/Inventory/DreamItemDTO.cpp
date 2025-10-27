@@ -20,10 +20,7 @@ bool FDreamGameItemInstance::MakeUniqueID()
 		UniqueID = FGuid::NewGuid();
 		return true;
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("not used UniqueID"));
-	}
+
 	return false;
 }
 

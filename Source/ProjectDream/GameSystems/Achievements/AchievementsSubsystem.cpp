@@ -15,8 +15,10 @@ static const FString AchievementsSlot = TEXT("Achievements");
 업적 정의데이터, 유저 상태 데이터 가져오기
 업적 유저상태에 따른 변경
 업적 갱신을 업적 아이디 뒤 _ 토큰으로 확인
-업적 ID 예시 : 업적ID_ItemType_ItemID
-			   업적ID_ClearRuleType
+업적 ID 예시 : EClearRule_ItemType_ItemID
+			   임의이름_ClearRuleType
+
+
 */
 void UAchievementsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -28,8 +30,6 @@ void UAchievementsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	{
 		if (Def.Id.IsNone()) 
 		{
-			UE_LOG(LogTemp, Warning, TEXT("[Ach] Skip: empty Id (title=%s)"),
-				*Def.Title.ToString());
 			continue;
 		}
 		Definition.Add(Def.Id, Def);
@@ -39,7 +39,7 @@ void UAchievementsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 	if (UGameInventory* Inv = UGameInventory::Get())
 	{
-		Inv->OnItemAdded.AddDynamic(this, &UAchievementsSubsystem::OutHandleItemAdded);
+		Inv->OnItemAdded.AddDynamic(this, &UAchievementsSubsystem::DispatchAchivementEvent);
 	}
 	HandleLogin();
 }
@@ -47,7 +47,6 @@ void UAchievementsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 void UAchievementsSubsystem::LoadAchievementDef(TArray<FAchievementDef>& OutDefs) const
 {
 	const FSoftObjectPath Path = AchievementData.ToSoftObjectPath();
-	UE_LOG(LogTemp, Warning, TEXT("AchievementData Path = %s"), *Path.ToString());
 
 	if (Path.IsValid())
 	{
@@ -103,11 +102,6 @@ void UAchievementsSubsystem::RequestSave(const TMap<FName, FAchievementState>& S
 
 void UAchievementsSubsystem::GetAllViewData(TArray<FAchievementViewData>& OutViewArr, TArray<FName>& OutIdsArr)
 {
-	if (ViewsCash.Num() != 0 && DefIdsCash.Num() != 0) {
-		OutViewArr = ViewsCash;
-		OutIdsArr = DefIdsCash;
-		return;
-	}
 
 	// View 새로 생성
 	for (const auto& Data : Definition)
@@ -119,6 +113,10 @@ void UAchievementsSubsystem::GetAllViewData(TArray<FAchievementViewData>& OutVie
 		ViewData.Title = Data.Value.Title;
 		ViewData.Description = Data.Value.Description;
 		ViewData.TargetValue = Data.Value.Target;
+		//TestCode
+		// 첫 로딩 시 별도의 데이터를 갖고 레드닷의 On Off 유무를 정해주어야 함.
+		//ViewData.bShowRedDot = AchievementState->Revision;
+		//TestCode
 		if (AchievementState != nullptr)
 		{
 			ViewData.Progress = AchievementState->Progress;
@@ -132,12 +130,6 @@ void UAchievementsSubsystem::GetAllViewData(TArray<FAchievementViewData>& OutVie
 		OutViewArr.Add(ViewData);
 		OutIdsArr.Add(AchievementID);
 		IdsByView.Add({AchievementID,ViewData});
-	}
-
-	if (ViewsCash.Num() <= 0 && DefIdsCash.Num() <= 0)
-	{
-		ViewsCash = OutViewArr;
-		DefIdsCash = OutIdsArr;	
 	}
 	return;
 }
@@ -180,43 +172,57 @@ bool UAchievementsSubsystem::HandleAchivementEvent(FName& EventId)
 		}
 		else if (Result.Rule == EClearRule::InventoryAdded)
 		{
-			InHandleItemAdded(Result.ItemCat, Result.ItemID);
+			HandleItemAdded(Result.ItemCat, Result.ItemID);
 		}
 	}
 	else if (Result.bHasItemData)
 	{
-		InHandleItemAdded(Result.ItemCat, Result.ItemID);
+		HandleItemAdded(Result.ItemCat, Result.ItemID);
 	}
 	return false;
 }
 
+void UAchievementsSubsystem::UpdateView(FAchievementViewData& OutViewData)
+{
+	OutViewData.Progress++;
+	OutViewData.bShowRedDot = true;
+	if (OutViewData.TargetValue <= OutViewData.Progress)
+	{
+		OutViewData.UnlockedTime = FDateTime::UtcNow();
+	}
+}
+
+void UAchievementsSubsystem::UpdateState(FAchievementState& OutStateData, const FAchievementDef& OutDef)
+{
+	if (OutDef.AchieveType == EAchievementType::Instant)
+	{
+		OutStateData.Progress++;
+		OutStateData.UnlockedTime = FDateTime::UtcNow();
+		OutStateData.AddRevision();
+	}
+	else
+	{
+		OutStateData.Progress++;
+		if (OutDef.Target <= OutStateData.Progress)
+		{
+			OutStateData.UnlockedTime = FDateTime::UtcNow();
+		}
+	}
+}
+
+
 void UAchievementsSubsystem::UpdateProgress(const FAchievementDef& OutDef,const FName& EventId)
 {
 	FAchievementState* State = States.Find(EventId);
-
+	
 	if (!State) return;
+	UE_LOG(LogTemp, Warning, TEXT("CALL UpdateProgress"));
 
-	if (OutDef.AchieveType == EAchievementType::Instant)
-	{
-		State->Progress++;
-		State->UnlockedTime = FDateTime::UtcNow();
-		return;
-	}
+	UpdateState(*State, OutDef);
 
-	State->Progress++;
-	if (OutDef.Target == State->Progress)
-	{
-		State->UnlockedTime = FDateTime::UtcNow();
-	}
-	// 진행 상황 save 필요
-	// 뷰 업데이트
 	if (FAchievementViewData* Data = IdsByView.Find(OutDef.Id))
 	{
-		Data->Progress++;
-		if (Data->TargetValue <= Data->Progress)
-		{
-			Data->UnlockedTime = FDateTime::UtcNow();
-		}
+		UpdateView(*Data);
 	}
 }
 
@@ -233,7 +239,7 @@ void UAchievementsSubsystem::HandleLogin()
 	}
 }
 
-void UAchievementsSubsystem::InHandleItemAdded(EItemCategory ItemCategory, int32 ItemID)
+void UAchievementsSubsystem::HandleItemAdded(EItemCategory ItemCategory, int32 ItemID)
 {	
 	TArray<FAchievementDef>* AchievementDef = DefsByEventType.Find(EClearRule::InventoryAdded);
 
@@ -253,7 +259,7 @@ void UAchievementsSubsystem::InHandleItemAdded(EItemCategory ItemCategory, int32
 	}
 }
 
-void UAchievementsSubsystem::OutHandleItemAdded(EItemCategory ItemCategory, int32 ItemID)
+void UAchievementsSubsystem::DispatchAchivementEvent(EItemCategory ItemCategory, int32 ItemID)
 {
 	FName ResultID(*FString::Printf(TEXT("ItemAdded_%s_%d"), AchievementIDParse::ToString(ItemCategory), ItemID));
 	HandleAchivementEvent(ResultID);
@@ -319,7 +325,7 @@ bool AchievementIDParse::StringToItemType(const FString& S, EItemCategory& Out)
 	return false;
 }
 
-bool AchievementIDParse::StringToAchievementType(const FString& S, EClearRule& Out)
+bool AchievementIDParse::CompareEClearType(const FString& S, EClearRule& Out)
 {
 	if (S.Equals(TEXT("Login")))
 	{
@@ -370,7 +376,6 @@ bool AchievementIDParse::ParseID(const FName& AchievementID, FParseResult& OutFP
 	return false;
 }
 
-
 bool AchievementIDParse::ParseItemTypeAndId(const TArray<FString>& OutTokens, FParseResult& OutFParseReulst)
 {
 	int32 Num = 0;
@@ -393,11 +398,11 @@ bool AchievementIDParse::ParseItemTypeAndId(const TArray<FString>& OutTokens, FP
 bool AchievementIDParse::ParseAchievementType(const TArray<FString>& OutTokens, FParseResult& OutFParseReulst)
 {	
 	EClearRule ClearRuleType;
-	if (StringToAchievementType(OutTokens[OutTokens.Num() - 1], ClearRuleType))
+	if (CompareEClearType(OutTokens[OutTokens.Num() - 1], ClearRuleType))
 	{
 		OutFParseReulst.Rule = ClearRuleType;
 		OutFParseReulst.bHasClearRule = true;
 		OutFParseReulst.bValid = true;
 	}
-	return true;
+	return false;
 }

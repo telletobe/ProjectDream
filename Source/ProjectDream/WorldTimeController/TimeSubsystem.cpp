@@ -8,13 +8,10 @@ void UTimeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	UGameInstanceSubsystem::Initialize(Collection);
 	GameTimer = UWorldTimeController::GetInstance();
-	UE_LOG(LogTemp,Warning,TEXT("Call TimeSubSystemManager!"));
-
 }
 
 void UTimeSubsystem::Deinitialize()
 {
-	UE_LOG(LogTemp, Warning, TEXT("ShtuDown TimeSubSystemManager!"));
 	UGameInstanceSubsystem::Deinitialize();
 }
 

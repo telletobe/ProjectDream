@@ -42,10 +42,7 @@ void UDreamGameInventorySubsystem::Initialize(FSubsystemCollectionBase& Collecti
 	if (!PlayerInventory)
 	{
 		PlayerInventory = UGameInventory::Get();
-		if (PlayerInventory->Init())
-		{
-			UE_LOG(LogTemp,Warning,TEXT("인벤토리 초기화 완료"));
-		}
+		PlayerInventory->Init();
 	}
 	else
 	{

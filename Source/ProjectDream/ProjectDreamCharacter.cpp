@@ -14,7 +14,6 @@
 #include "../GameSystems/Inventory/GameInventory.h"
 #include "../GameSystems/Inventory/GameItem.h"
 #include "GameSystems/Achievements/AchievementsSubsystem.h"
-#include "GameSystems/Common/GameEventBus/GameEventBus.h"
 
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -147,13 +146,6 @@ void AProjectDreamCharacter::OnInteract(const FInputActionValue& Value)
 	if (Focused)
 	{
 		OnInteractAction.Broadcast(this);
-		if (UGameInstance* GI = GetGameInstance())
-		{
-			if (UGameEventBus* EventBus = GI->GetSubsystem<UGameEventBus>())
-			{
-				//EventBus->Publish(FName(TEXT("TEST_ACHIEVEMENT")));
-			}
-		}
 	}
 }
 

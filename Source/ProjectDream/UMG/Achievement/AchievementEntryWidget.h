@@ -14,6 +14,7 @@
 
 class UTextBlock;
 class UProgressBar;
+class UBorder;
 
 UCLASS()
 class PROJECTDREAM_API UAchievementEntryWidget : public UUserWidget, public IUserObjectListEntry
@@ -25,6 +26,7 @@ public:
 	void UpdateProgress();
 	void SyncFromItem();
 	void SetViewItem(FAchievementViewData* ViewItem);
+	void OffRedDot();
 private:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UTextBlock> TextTitle;
@@ -40,6 +42,8 @@ private:
 	
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UProgressBar> AchieveClear;
+
+	UPROPERTY(meta = (BindWidget)) TObjectPtr<UBorder> RedDot;
 
 	UPROPERTY() FAchievementViewData Item;
 };

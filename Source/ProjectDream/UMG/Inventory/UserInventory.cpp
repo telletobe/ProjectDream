@@ -39,7 +39,6 @@ void UUserInventory::NativeConstruct()
 	if (UGameInventory* Inv = UGameInventory::Get())
 	{
 		Inv->ChangeInventoryData.AddUniqueDynamic(this, &UUserInventory::UpdateInventoryUI);
-		UE_LOG(InventoryUIWidget,Warning,TEXT("Binding Inventory"));
 	}
 }
 
@@ -136,10 +135,8 @@ void UUserInventory::UpdateInventoryUI()
 		ViewItems.Add(Row);
 	}
 	UpdateWeightText();
-	UE_LOG(InventoryUIWidget, Warning, TEXT("Item View 데이터 길이 : %d"), ViewItems.Num());
 	ItemList->SetListItems(ViewItems);
 	ItemList->RequestRefresh();
-	UE_LOG(LogTemp, Warning, TEXT("Call UpdateInventoryUI"));
 }
 
 /*
