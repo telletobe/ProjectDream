@@ -20,13 +20,6 @@ struct FAchievementViewData
 	bool operator== (const FAchievementViewData& Rhs);
 	FAchievementViewData() = default;
 
-	// 계산 필드(편의)
-	//float GetPercent() const
-	//{
-	//	if (TargetValue > 0) { return FMath::Clamp((float)Progress / (float)TargetValue, 0.f, 1.f); }
-	//	return UnlockedTime ? 1.f : 0.f;
-	//}
-
 	FText GetProgressText() const
 	{
 		if (TargetValue > 0)

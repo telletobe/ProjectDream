@@ -14,16 +14,12 @@ void UAchievementEntryWidget::NativeOnListItemObjectSet(UObject* ListItemObject)
 	if (const UAchieveViewWrapper* Row = Cast<UAchieveViewWrapper>(ListItemObject))
 	{
 		Item = Row->Data;
-		UE_LOG(LogTemp,Warning,TEXT("Entry ItemProgress : %d"),Item.Progress);
 	}
 	SyncFromItem();
-
 }
 
 void UAchievementEntryWidget::SyncFromItem()
 {
-	UE_LOG(LogTemp,Warning,TEXT("Call SyncFromItem"));
-
 	if (TextTitle) TextTitle->SetText(Item.Title);
 	if (DescText) DescText->SetText(Item.Description);
 	if (ProgressText) ProgressText->SetText(Item.GetProgressText());

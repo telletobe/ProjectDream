@@ -23,10 +23,6 @@ void UAchievementListWidget::NativeConstruct()
 	if (AchieveList)
 	{
 		AchieveList->OnItemClicked().AddUObject(this, &UAchievementListWidget::HandleItemClicked);
-		if (AchieveList->OnItemClicked().IsBound())
-		{
-			UE_LOG(LogTemp,Warning,TEXT("AchieveList의 바인딩이 완료됌"));
-		}
 	}
 
 	AProjectDreamPlayerController* PC = Cast<AProjectDreamPlayerController>(GetOwningPlayer());

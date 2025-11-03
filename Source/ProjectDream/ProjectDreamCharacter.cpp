@@ -135,9 +135,6 @@ void AProjectDreamCharacter::Look(const FInputActionValue& Value)
 
 void AProjectDreamCharacter::OpenInventory(const FInputActionValue& Input)
 {
-	// BroadCast();
-	GEngine->AddOnScreenDebugMessage(-1,5.0f,FColor::MakeRandomColor(), TEXT("OpenInventory Event"));
-	UE_LOG(LogTemp,Warning,TEXT("OpenInventory Event"));
 	OnInventoryEvent.Broadcast();
 }
 
@@ -151,7 +148,6 @@ void AProjectDreamCharacter::OnInteract(const FInputActionValue& Value)
 
 void AProjectDreamCharacter::OnAchievement(const FInputActionValue& Value)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Call AchievementEvent"));
 	OnAchievementEvent.Broadcast();
 	return;
 }

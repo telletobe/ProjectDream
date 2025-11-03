@@ -142,15 +142,10 @@ void UAchievementsSubsystem::GetAllViewData(TArray<FAchievementViewData>& OutVie
 		ViewData.Title = Data.Value.Title;
 		ViewData.Description = Data.Value.Description;
 		ViewData.TargetValue = Data.Value.Target;
-		//TestCode
-		// 첫 로딩 시 SeenRevisionById를 로딩하여 레드닷의 On Off 유무를 판별.
-		// 현재 업데이트 됀 업적인지 아닌지 분간하는 수단 x
-		//ViewData.bShowRedDot = AchievementState->Revision;
-		//TestCode
 		if (AchievementState != nullptr)
 		{
 			ViewData.Progress = AchievementState->Progress;
-			ViewData.UnlockedTime = AchievementState->UnlockedTime; // false
+			ViewData.UnlockedTime = AchievementState->UnlockedTime;
 		}
 		else
 		{
@@ -226,13 +221,11 @@ void UAchievementsSubsystem::UpdateState(FAchievementState& OutStateData, const 
 	if (OutDef.AchieveType == EAchievementType::Instant)
 	{
 		OutStateData.Progress++;
-		//OutStateData.Seen.AddRevision();
 		OutStateData.UnlockedTime = FDateTime::UtcNow();
 	}
 	else
 	{
 		OutStateData.Progress++;
-		//OutStateData.Seen.AddRevision();
 		if (OutDef.Target <= OutStateData.Progress)
 		{
 			OutStateData.UnlockedTime = FDateTime::UtcNow();
