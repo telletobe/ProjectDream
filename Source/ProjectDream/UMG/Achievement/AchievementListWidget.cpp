@@ -3,6 +3,7 @@
 #include "UMG/Achievement/AchievementListWidget.h"
 #include "ProjectDreamCharacter.h"
 #include "GameSystems/Achievements/AchievementsSubsystem.h"
+#include "GameSystems/RedDot/RedDotSubSystem.h"
 #include "ProjectDreamPlayerController.h"
 #include "AchievementEntryWidget.h"
 #include "Components/ListView.h"
@@ -37,7 +38,6 @@ void UAchievementListWidget::NativeConstruct()
 			Player->OnAchievementEvent.AddUniqueDynamic(this, &UAchievementListWidget::OnOffUI);	
 		}
 	}
-
 	RefreshAll();
 }
 
@@ -128,7 +128,6 @@ void UAchievementListWidget::UpdateAchieveEntry(const FName EventId)
 
 void UAchievementListWidget::HandleItemClicked(UObject* Item)
 {
-
 	if (UUserWidget* EntryWidget = AchieveList->GetEntryWidgetFromItem(Item))
 	{	
 		if (UAchievementEntryWidget* Entry = Cast<UAchievementEntryWidget>(EntryWidget))
@@ -143,6 +142,18 @@ void UAchievementListWidget::HandleItemClicked(UObject* Item)
 					if (auto* SubSys = GI->GetSubsystem<URedDotSubSystem>())
 					{
 						SubSys->MarkSeen(*EventId);
+					}
+				}
+
+				if (UGameInstance* GI = GetGameInstance())
+				{
+					if (UAchievementsSubsystem* SubSys = GI->GetSubsystem<UAchievementsSubsystem>())
+					{
+						FAchievementState* State = SubSys->GetAchievementStateById(*EventId);
+						if (State->UnlockedTime != FDateTime::MinValue() && State->bRewardClaimed == false)
+						{
+							State->bRewardClaimed = true;
+						}
 					}
 				}
 			}

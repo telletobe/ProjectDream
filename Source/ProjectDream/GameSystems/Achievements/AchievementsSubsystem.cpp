@@ -18,9 +18,6 @@ static const FString AchievementsSeenSlot = TEXT("AchievementsSeenState");
 업적 갱신을 업적 아이디 뒤 _ 토큰으로 확인
 업적 ID 예시 : EClearRule_ItemType_ItemID
 			   임의이름_ClearRuleType
-
-할 일 : 데이터와 뷰 동기화 하기
-로딩 시 업적 해금도가 정상적으로 반영돼지않는 문제가 있음.
 */
 void UAchievementsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -49,7 +46,7 @@ void UAchievementsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 		}
 		DefsByEventType.FindOrAdd(Def.EventType).Add(Def);
-		SeenRevisionById.FindOrAdd(Def.Id);
+		//SeenRevisionById.FindOrAdd(Def.Id);
 	}
 
 	for (auto& State : LoadState)
@@ -97,15 +94,20 @@ const FAchievementDef* UAchievementsSubsystem::GetAchievementDefById(const FName
 
 const FAchievementState* UAchievementsSubsystem::GetAchievementStateById(const FName& EventId) const
 {
+	return const_cast<UAchievementsSubsystem*>(this)->GetAchievementStateById(EventId);
+}
+
+FAchievementState* UAchievementsSubsystem::GetAchievementStateById(const FName& EventId)
+{
 	return States.Find(EventId);
 }
 
-const TMap <FName, FAchievementDef>& UAchievementsSubsystem::GetAllAchievementDef()
+const TMap <FName, FAchievementDef>& UAchievementsSubsystem::GetAllAchievementDef() const
 {
 	return Definition;
 }
 
-const TMap<FName, FAchievementState>& UAchievementsSubsystem::GetAllAchievementState()
+const TMap<FName, FAchievementState>& UAchievementsSubsystem::GetAllAchievementState() const
 {
 	return States;
 }
@@ -213,7 +215,6 @@ bool UAchievementsSubsystem::HandleAchivementEvent(FName& EventId)
 void UAchievementsSubsystem::UpdateView(FAchievementViewData& OutViewData)
 {
 	OutViewData.Progress++;
-	OutViewData.bShowRedDot = true;
 	if (OutViewData.TargetValue <= OutViewData.Progress)
 	{
 		OutViewData.UnlockedTime = FDateTime::UtcNow();
@@ -225,13 +226,13 @@ void UAchievementsSubsystem::UpdateState(FAchievementState& OutStateData, const 
 	if (OutDef.AchieveType == EAchievementType::Instant)
 	{
 		OutStateData.Progress++;
-		OutStateData.AddRevision();
+		//OutStateData.Seen.AddRevision();
 		OutStateData.UnlockedTime = FDateTime::UtcNow();
 	}
 	else
 	{
 		OutStateData.Progress++;
-		OutStateData.AddRevision();
+		//OutStateData.Seen.AddRevision();
 		if (OutDef.Target <= OutStateData.Progress)
 		{
 			OutStateData.UnlockedTime = FDateTime::UtcNow();
@@ -252,9 +253,9 @@ void UAchievementsSubsystem::UpdateProgress(const FAchievementDef& OutDef,const 
 
 	if (FAchievementViewData* Data = IdsByView.Find(OutDef.Id))
 	{
+		if (State->UnlockedTime != FDateTime::MinValue() && State->bRewardClaimed == false)	Data->bShowRedDot = true;
 		UpdateView(*Data);
 	}
-
 }
 
 void UAchievementsSubsystem::HandleLogin()

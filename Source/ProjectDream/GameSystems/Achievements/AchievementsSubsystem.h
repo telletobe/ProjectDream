@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "DreamAchievements.h"
-#include "../RedDot/RedDotSubSystem.h"
+#include "../RedDot/RedDotState.h"
 #include "../Inventory/DreamItemDTO.h"
 #include "AchievementViewData.h"
 #include "AchievementsSubsystem.generated.h"
@@ -28,12 +28,13 @@ public:
 
 	const FAchievementDef* GetAchievementDefById(const FName& EventId) const;
 	const FAchievementState* GetAchievementStateById(const FName& EventId) const;
-	const TMap <FName, FAchievementDef>& GetAllAchievementDef();
-	const TMap<FName, FAchievementState>& GetAllAchievementState();
+	FAchievementState* GetAchievementStateById(const FName& EventId);
+	const TMap <FName, FAchievementDef>& GetAllAchievementDef() const;
+	const TMap<FName, FAchievementState>& GetAllAchievementState() const;
 	void GetAllViewData(TArray<FAchievementViewData>& OutViewArr, TArray<FName>& OutIdsArr);
 	void GetViewDataById(FAchievementViewData& OutView,const FName& EventId);
 	UFUNCTION()	void DispatchAchivementEvent(EItemCategory ItemCategory, int32 ItemID);
-	TMap<FName, int32>& GetSeenReivision() { return SeenRevisionById; }
+	//TMap<FName, int32>& GetSeenReivision() { return SeenRevisionById; }
 
 public:
 	void RequestSave(const TMap<FName,FAchievementState>& StateData);
@@ -60,7 +61,7 @@ private:
 	TMap<EClearRule, TArray<FAchievementDef>> DefsByEventType;
 	TMap<FName, FAchievementViewData> IdsByView;
 	UPROPERTY() TMap<FName, FAchievementState> States;
-	TMap<FName, int32> SeenRevisionById; 
+	/*TMap<FName, int32> SeenRevisionById; */
 };
 
 namespace AchievementIDParse

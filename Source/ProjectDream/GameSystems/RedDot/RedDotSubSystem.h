@@ -6,12 +6,7 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "RedDotSubSystem.generated.h"
 
-USTRUCT(BlueprintType)
-struct FAchievementSeen
-{
-	GENERATED_BODY()
-	UPROPERTY(SaveGame) int32 LastSeenRevision = 0;
-};
+
 
 UCLASS()
 class PROJECTDREAM_API URedDotSubSystem : public UGameInstanceSubsystem

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "../RedDot/RedDotState.h"
 #include "DreamAchievements.generated.h"
 
 UENUM(BlueprintType)
@@ -48,11 +49,8 @@ struct FAchievementState
 	UPROPERTY(SaveGame) FName Id = NAME_None;
 	UPROPERTY(SaveGame) int32 Progress = 0;
 	UPROPERTY(SaveGame) FDateTime UnlockedTime = FDateTime::MinValue();
-public:
-	int32 GetRevision() const { return Revision; }
-	inline void AddRevision() { Revision++; }
-private:
-	UPROPERTY(SaveGame, meta = (AllowPrivateAccess = "true")) int32 Revision = 0;
+	UPROPERTY(SaveGame) bool bRewardClaimed = false;
+	//FRedDotState Seen;
 };
 
 UCLASS()
