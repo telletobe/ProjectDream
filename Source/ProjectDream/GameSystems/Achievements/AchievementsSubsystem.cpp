@@ -10,6 +10,7 @@
 //#include "GameSystems/Common/GameEventBus/GameEventBus.h"
 
 static const FString AchievementsSlot = TEXT("Achievements");
+static const FString AchievementsSeenSlot = TEXT("AchievementsSeenState");
 
 /* 업적이 하는 일
 업적 정의데이터, 유저 상태 데이터 가져오기
@@ -18,13 +19,21 @@ static const FString AchievementsSlot = TEXT("Achievements");
 업적 ID 예시 : EClearRule_ItemType_ItemID
 			   임의이름_ClearRuleType
 
-
+할 일 : 데이터와 뷰 동기화 하기
+로딩 시 업적 해금도가 정상적으로 반영돼지않는 문제가 있음.
 */
 void UAchievementsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 	TArray<FAchievementDef> AchieveDefs;
+	TArray<FAchievementState> LoadState;
 	LoadAchievementDef(AchieveDefs);
+
+	// 저장됀 SeenRevisionById 로딩 필요
+	if (SaveJson::LoadArrayFromFile(AchievementsSlot, LoadState))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SaveLoading Succeded"));
+	}
 							
 	for (const auto& Def : AchieveDefs)
 	{
@@ -33,8 +42,19 @@ void UAchievementsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 			continue;
 		}
 		Definition.Add(Def.Id, Def);
-		States.FindOrAdd(Def.Id);
+		FAchievementState& State = States.FindOrAdd(Def.Id);
+		if (State.Id.IsNone())          // 로드본에 Id가 비어있을 수도 있음
+		{
+			State.Id = Def.Id;          // 반드시 보정		
+
+		}
 		DefsByEventType.FindOrAdd(Def.EventType).Add(Def);
+		SeenRevisionById.FindOrAdd(Def.Id);
+	}
+
+	for (auto& State : LoadState)
+	{
+		States.FindOrAdd(State.Id) = State;
 	}
 
 	if (UGameInventory* Inv = UGameInventory::Get())
@@ -54,6 +74,14 @@ void UAchievementsSubsystem::LoadAchievementDef(TArray<FAchievementDef>& OutDefs
 		{
 			OutDefs = DA->AchievementList;
 		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Load Failed"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp,Warning,TEXT("Load Path Invalid"));
 	}
 }
 
@@ -72,12 +100,12 @@ const FAchievementState* UAchievementsSubsystem::GetAchievementStateById(const F
 	return States.Find(EventId);
 }
 
-const TMap <FName, FAchievementDef> UAchievementsSubsystem::GetAllAchievementDef()
+const TMap <FName, FAchievementDef>& UAchievementsSubsystem::GetAllAchievementDef()
 {
 	return Definition;
 }
 
-const TMap<FName, FAchievementState> UAchievementsSubsystem::GetAllAchievementState()
+const TMap<FName, FAchievementState>& UAchievementsSubsystem::GetAllAchievementState()
 {
 	return States;
 }
@@ -102,7 +130,6 @@ void UAchievementsSubsystem::RequestSave(const TMap<FName, FAchievementState>& S
 
 void UAchievementsSubsystem::GetAllViewData(TArray<FAchievementViewData>& OutViewArr, TArray<FName>& OutIdsArr)
 {
-
 	// View 새로 생성
 	for (const auto& Data : Definition)
 	{
@@ -114,7 +141,8 @@ void UAchievementsSubsystem::GetAllViewData(TArray<FAchievementViewData>& OutVie
 		ViewData.Description = Data.Value.Description;
 		ViewData.TargetValue = Data.Value.Target;
 		//TestCode
-		// 첫 로딩 시 별도의 데이터를 갖고 레드닷의 On Off 유무를 정해주어야 함.
+		// 첫 로딩 시 SeenRevisionById를 로딩하여 레드닷의 On Off 유무를 판별.
+		// 현재 업데이트 됀 업적인지 아닌지 분간하는 수단 x
 		//ViewData.bShowRedDot = AchievementState->Revision;
 		//TestCode
 		if (AchievementState != nullptr)
@@ -125,7 +153,7 @@ void UAchievementsSubsystem::GetAllViewData(TArray<FAchievementViewData>& OutVie
 		else
 		{
 			ViewData.Progress = 0;
-			ViewData.UnlockedTime = FDateTime::MaxValue();
+			ViewData.UnlockedTime = FDateTime::MinValue();
 		}
 		OutViewArr.Add(ViewData);
 		OutIdsArr.Add(AchievementID);
@@ -197,25 +225,27 @@ void UAchievementsSubsystem::UpdateState(FAchievementState& OutStateData, const 
 	if (OutDef.AchieveType == EAchievementType::Instant)
 	{
 		OutStateData.Progress++;
-		OutStateData.UnlockedTime = FDateTime::UtcNow();
 		OutStateData.AddRevision();
+		OutStateData.UnlockedTime = FDateTime::UtcNow();
 	}
 	else
 	{
 		OutStateData.Progress++;
+		OutStateData.AddRevision();
 		if (OutDef.Target <= OutStateData.Progress)
 		{
 			OutStateData.UnlockedTime = FDateTime::UtcNow();
 		}
 	}
+	RequestSave(States);
 }
-
 
 void UAchievementsSubsystem::UpdateProgress(const FAchievementDef& OutDef,const FName& EventId)
 {
 	FAchievementState* State = States.Find(EventId);
 	
 	if (!State) return;
+	if (State->UnlockedTime != FDateTime::MinValue()) return;
 	UE_LOG(LogTemp, Warning, TEXT("CALL UpdateProgress"));
 
 	UpdateState(*State, OutDef);
@@ -224,6 +254,7 @@ void UAchievementsSubsystem::UpdateProgress(const FAchievementDef& OutDef,const 
 	{
 		UpdateView(*Data);
 	}
+
 }
 
 void UAchievementsSubsystem::HandleLogin()
@@ -325,7 +356,7 @@ bool AchievementIDParse::StringToItemType(const FString& S, EItemCategory& Out)
 	return false;
 }
 
-bool AchievementIDParse::CompareEClearType(const FString& S, EClearRule& Out)
+bool AchievementIDParse::ParseClearRuleToken(const FString& S, EClearRule& Out)
 {
 	if (S.Equals(TEXT("Login")))
 	{
@@ -398,7 +429,7 @@ bool AchievementIDParse::ParseItemTypeAndId(const TArray<FString>& OutTokens, FP
 bool AchievementIDParse::ParseAchievementType(const TArray<FString>& OutTokens, FParseResult& OutFParseReulst)
 {	
 	EClearRule ClearRuleType;
-	if (CompareEClearType(OutTokens[OutTokens.Num() - 1], ClearRuleType))
+	if (ParseClearRuleToken(OutTokens[OutTokens.Num() - 1], ClearRuleType))
 	{
 		OutFParseReulst.Rule = ClearRuleType;
 		OutFParseReulst.bHasClearRule = true;

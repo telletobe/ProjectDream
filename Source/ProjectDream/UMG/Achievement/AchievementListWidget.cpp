@@ -81,8 +81,6 @@ void UAchievementListWidget::RefreshAll()
 
 	AchieveList->ClearListItems();
 
-	UE_LOG(LogTemp,Warning,TEXT("View 길이 : %d"), Views.Num());
-
 	TArray<UObject*> Items;
 	Items.Reserve(Views.Num());
 
@@ -98,7 +96,6 @@ void UAchievementListWidget::RefreshAll()
 
 void UAchievementListWidget::UpdateAchieveEntry(const FName EventId)
 {
-	UE_LOG(LogTemp,Warning,TEXT("Call UpdateAchieveEntry"));
 	if (!AchieveList) return;
 
 	FAchievementViewData View = FAchievementViewData();
@@ -129,16 +126,26 @@ void UAchievementListWidget::UpdateAchieveEntry(const FName EventId)
 	}
 }
 
-//TestCode
 void UAchievementListWidget::HandleItemClicked(UObject* Item)
 {
-	UE_LOG(LogTemp, Warning, TEXT("call Handle ItemClick"));
+
 	if (UUserWidget* EntryWidget = AchieveList->GetEntryWidgetFromItem(Item))
-	{
+	{	
 		if (UAchievementEntryWidget* Entry = Cast<UAchievementEntryWidget>(EntryWidget))
 		{
 			Entry->OffRedDot();
-		}
-	}
 
+			const FName* EventId = IdToItem.FindKey(Cast<UAchieveViewWrapper>(Item));
+			if (EventId)
+			{
+				if (UGameInstance* GI = GetGameInstance())
+				{
+					if (auto* SubSys = GI->GetSubsystem<URedDotSubSystem>())
+					{
+						SubSys->MarkSeen(*EventId);
+					}
+				}
+			}
+		}
+	}	
 }

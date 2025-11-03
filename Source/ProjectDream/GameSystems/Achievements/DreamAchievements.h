@@ -45,21 +45,14 @@ USTRUCT(BlueprintType)
 struct FAchievementState
 {
 	GENERATED_BODY()
-	FName Id = NAME_None;
-	int32 Progress = 0;
-	FDateTime UnlockedTime = FDateTime::MaxValue();
+	UPROPERTY(SaveGame) FName Id = NAME_None;
+	UPROPERTY(SaveGame) int32 Progress = 0;
+	UPROPERTY(SaveGame) FDateTime UnlockedTime = FDateTime::MinValue();
 public:
 	int32 GetRevision() const { return Revision; }
 	inline void AddRevision() { Revision++; }
 private:
-	int32 Revision = 0;
-};
-
-USTRUCT(BlueprintType)
-struct FAchievementSeen
-{
-	GENERATED_BODY()
-	int32 SeenRevision = 0;
+	UPROPERTY(SaveGame, meta = (AllowPrivateAccess = "true")) int32 Revision = 0;
 };
 
 UCLASS()

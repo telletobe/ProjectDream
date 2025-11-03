@@ -24,29 +24,14 @@ void UAchievementEntryWidget::SyncFromItem()
 {
 	UE_LOG(LogTemp,Warning,TEXT("Call SyncFromItem"));
 
-	if (TextTitle)
-	{
-		TextTitle->SetText(Item.Title);
-	}
-
-	if (DescText)
-	{
-		DescText->SetText(Item.Description);
-	}
-
-	if (ProgressText)
-	{
-		ProgressText->SetText(Item.GetProgressText());
-	}
-
-	if (StatusText)
-	{
-		StatusText->SetText(Item.GetStatusText());
-	}
+	if (TextTitle) TextTitle->SetText(Item.Title);
+	if (DescText) DescText->SetText(Item.Description);
+	if (ProgressText) ProgressText->SetText(Item.GetProgressText());
+	if (StatusText) StatusText->SetText(Item.GetStatusText());
 
 	if (AchieveClear)
 	{
-		if (Item.UnlockedTime != FDateTime::MaxValue())
+		if (Item.UnlockedTime != FDateTime::MinValue())
 		{
 			AchieveClear->SetPercent(1.0f);
 		}
@@ -67,7 +52,6 @@ void UAchievementEntryWidget::SetViewItem(FAchievementViewData* ViewItem)
 
 void UAchievementEntryWidget::OffRedDot()
 {
-	UE_LOG(LogTemp,Warning,TEXT("Call OffRedDot"));
 	Item.bShowRedDot = false;
 	if (RedDot)
 	{

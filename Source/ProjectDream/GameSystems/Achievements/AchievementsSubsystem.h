@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "DreamAchievements.h"
+#include "../RedDot/RedDotSubSystem.h"
 #include "../Inventory/DreamItemDTO.h"
 #include "AchievementViewData.h"
 #include "AchievementsSubsystem.generated.h"
@@ -23,26 +24,31 @@ public:
 
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
+public:
 
 	const FAchievementDef* GetAchievementDefById(const FName& EventId) const;
 	const FAchievementState* GetAchievementStateById(const FName& EventId) const;
-	const TMap <FName, FAchievementDef> GetAllAchievementDef();
-	const TMap<FName, FAchievementState> GetAllAchievementState();
+	const TMap <FName, FAchievementDef>& GetAllAchievementDef();
+	const TMap<FName, FAchievementState>& GetAllAchievementState();
 	void GetAllViewData(TArray<FAchievementViewData>& OutViewArr, TArray<FName>& OutIdsArr);
 	void GetViewDataById(FAchievementViewData& OutView,const FName& EventId);
-	void RequestSave(const TMap<FName,FAchievementState>& StateData);
 	UFUNCTION()	void DispatchAchivementEvent(EItemCategory ItemCategory, int32 ItemID);
+	TMap<FName, int32>& GetSeenReivision() { return SeenRevisionById; }
+
+public:
+	void RequestSave(const TMap<FName,FAchievementState>& StateData);
 private:
 	void UpdateView(FAchievementViewData& OutViewData);
 	void UpdateState(FAchievementState& OutStateData, const FAchievementDef& OutDef);
+	void UpdateProgress(const FAchievementDef& OutDef, const FName& EventId);
+	bool HandleAchivementEvent(FName& EventId);
+	void HandleItemAdded(EItemCategory ItemCategory, int32 ItemID);
+	void HandleLogin();
+private:
 	TMap<FName, FAchievementState> LoadNow();
 	void SaveNow(const TMap<FName, FAchievementState>& InStates);
 	void FlushPendingSave();
-	void UpdateProgress(const FAchievementDef& OutDef, const FName& EventId);
 	void LoadAchievementDef(TArray<FAchievementDef>& OutDefs) const;
-	bool HandleAchivementEvent(FName& EventId);
-	void HandleLogin();
-	void HandleItemAdded(EItemCategory ItemCategory, int32 ItemID);
 private:
 	UPROPERTY(EditAnywhere, config, Category = "Achievements")
 	TSoftObjectPtr<class UDreamAchievements> AchievementData;
@@ -54,8 +60,7 @@ private:
 	TMap<EClearRule, TArray<FAchievementDef>> DefsByEventType;
 	TMap<FName, FAchievementViewData> IdsByView;
 	UPROPERTY() TMap<FName, FAchievementState> States;
-
-	TMap<FName, FAchievementSeen> SeenMap; 
+	TMap<FName, int32> SeenRevisionById; 
 };
 
 namespace AchievementIDParse
@@ -72,7 +77,7 @@ namespace AchievementIDParse
 	};
 
 	bool StringToItemType(const FString& S, EItemCategory& Out);
-	bool CompareEClearType(const FString& S, EClearRule& Out);
+	bool ParseClearRuleToken(const FString& S, EClearRule& Out);
 	// 디버깅 용
 	const TCHAR* ToString(EItemCategory Cat);
 
