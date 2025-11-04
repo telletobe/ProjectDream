@@ -35,9 +35,9 @@ public:
 public:
 	void RequestSave(const TMap<FName,FAchievementState>& StateData);
 private:
-	void UpdateView(FAchievementViewData& OutViewData);
+	void UpdateView(FAchievementViewData& OutViewData , FAchievementState& OutState);
 	void UpdateState(FAchievementState& OutStateData, const FAchievementDef& OutDef);
-	void UpdateProgress(const FAchievementDef& OutDef, const FName& EventId);
+	void UpdateProgress(const FName& EventId);
 	bool HandleAchivementEvent(FName& EventId);
 	void HandleItemAdded(EItemCategory ItemCategory, int32 ItemID);
 	void HandleLogin();

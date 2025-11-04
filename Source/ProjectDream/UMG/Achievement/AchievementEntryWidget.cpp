@@ -3,6 +3,7 @@
 
 #include "UMG/Achievement/AchievementEntryWidget.h"
 #include "../GameSystems/Achievements/AchieveViewWrapper.h"
+#include "../GameSystems/Achievements/AchievementsSubsystem.h"
 #include "Components/TextBlock.h"
 #include "Components/Border.h"
 #include "Components/ProgressBar.h"
@@ -14,6 +15,7 @@ void UAchievementEntryWidget::NativeOnListItemObjectSet(UObject* ListItemObject)
 	if (const UAchieveViewWrapper* Row = Cast<UAchieveViewWrapper>(ListItemObject))
 	{
 		Item = Row->Data;
+
 	}
 	SyncFromItem();
 }
@@ -31,13 +33,16 @@ void UAchievementEntryWidget::SyncFromItem()
 		{
 			AchieveClear->SetPercent(1.0f);
 		}
-	}
-	if (Item.bShowRedDot)
-	{
-		if (RedDot)
+		else if (Item.TargetValue > 0)
 		{
-			RedDot->SetVisibility(ESlateVisibility::Visible);
+			float Percent = (float)Item.Progress / (float)Item.TargetValue;
+			AchieveClear->SetPercent(Percent);
 		}
+	}
+
+	if (Item.bRewardClaimed == false && Item.UnlockedTime != FDateTime::MinValue())
+	{
+		OnRedDot();
 	}
 }
 
@@ -48,17 +53,34 @@ void UAchievementEntryWidget::SetViewItem(FAchievementViewData* ViewItem)
 
 void UAchievementEntryWidget::OffRedDot()
 {
-	Item.bShowRedDot = false;
 	if (RedDot)
 	{
 		RedDot->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
 
-void UAchievementEntryWidget::UpdateProgress()
+void UAchievementEntryWidget::OnRedDot()
 {
-	if (AchieveClear)
+	if (RedDot)
 	{
-		//AchieveClear->SetPercent();
+		RedDot->SetVisibility(ESlateVisibility::Visible);
 	}
+}
+
+bool UAchievementEntryWidget::HasRedDot()
+{
+	if (RedDot)
+	{
+		ESlateVisibility RedDotState = RedDot->GetVisibility();
+		switch (RedDotState)
+		{
+		case ESlateVisibility::Visible:
+			return true;
+		case ESlateVisibility::Hidden:
+			return false;
+		default:
+			return false;
+		}
+	}
+	return false;
 }

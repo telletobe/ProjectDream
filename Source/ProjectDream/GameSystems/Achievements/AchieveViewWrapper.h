@@ -16,7 +16,5 @@ class PROJECTDREAM_API UAchieveViewWrapper : public UObject
 	GENERATED_BODY()
 
 public:
-	void TestRedDot();
-public:
 	UPROPERTY()	FAchievementViewData Data;	
 };

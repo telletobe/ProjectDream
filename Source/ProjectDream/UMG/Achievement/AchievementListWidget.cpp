@@ -12,6 +12,7 @@
 void UAchievementListWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
+
 	if (UGameInstance* GI = GetGameInstance())
 	{
 		if (auto* SubSys = GI->GetSubsystem<UAchievementsSubsystem>())
@@ -31,32 +32,10 @@ void UAchievementListWidget::NativeConstruct()
 		AProjectDreamCharacter* Player = Cast<AProjectDreamCharacter>(PC->GetPawn());
 		if (Player)
 		{
-			Player->OnAchievementEvent.AddUniqueDynamic(this, &UAchievementListWidget::OnOffUI);	
+			Player->OnAchievementEvent.AddUniqueDynamic(this, &UAchievementListWidget::OnOffUI);
 		}
 	}
 	RefreshAll();
-}
-
-void UAchievementListWidget::OnOffUI()
-{
-	ESlateVisibility Visible = GetVisibility();
-	switch (Visible)
-	{
-	case ESlateVisibility::Visible:
-		SetVisibility(ESlateVisibility::Hidden);
-		break;
-	case ESlateVisibility::Collapsed:
-		break;
-	case ESlateVisibility::Hidden:	
-		SetVisibility(ESlateVisibility::Visible);
-		break;
-	case ESlateVisibility::HitTestInvisible:
-		break;
-	case ESlateVisibility::SelfHitTestInvisible:
-		break;
-	default:
-		break;
-	}
 }
 
 void UAchievementListWidget::RefreshAll()
@@ -71,54 +50,48 @@ void UAchievementListWidget::RefreshAll()
 	{
 		if (UAchievementsSubsystem* SubSys = GI->GetSubsystem<UAchievementsSubsystem>())
 		{
-			SubSys->GetAllViewData(Views,AchieveIds);
+			SubSys->GetAllViewData(Views, AchieveIds);
+
+			AchieveList->ClearListItems();
+
+			TArray<UObject*> Items;
+			Items.Reserve(Views.Num());
+
+			for (int32 i = 0; i < Views.Num(); i++)
+			{
+				auto* Row = NewObject<UAchieveViewWrapper>(this);
+				Row->Data = Views[i];
+				Items.Add(Row);
+				IdToItem.Add(AchieveIds[i], Row);
+			}
+			AchieveList->SetListItems(Items);
 		}
 	}
-
-	AchieveList->ClearListItems();
-
-	TArray<UObject*> Items;
-	Items.Reserve(Views.Num());
-
-	for (int32 i = 0; i < Views.Num(); i++)
-	{
-		auto* Row = NewObject<UAchieveViewWrapper>(this);
-		Row->Data = Views[i];
-		Items.Add(Row);
-		IdToItem.Add(AchieveIds[i], Row);
-	}
-	AchieveList->SetListItems(Items);
 }
 
 void UAchievementListWidget::UpdateAchieveEntry(const FName EventId)
 {
 	if (!AchieveList) return;
 
-	FAchievementViewData View = FAchievementViewData();
+	FAchievementViewData View{};
 	if (UGameInstance* GI = GetGameInstance())
 	{
 		if (UAchievementsSubsystem* SubSys = GI->GetSubsystem<UAchievementsSubsystem>())
 		{
 			SubSys->GetViewDataById(View,EventId);
-		}
-	}
 
-	if (UAchieveViewWrapper* Item = *IdToItem.Find(EventId))
-	{
-		if (UUserWidget* Row = AchieveList->GetEntryWidgetFromItem(Item))
-		{
-			if (UAchievementEntryWidget* Entry = Cast<UAchievementEntryWidget>(Row))
+			if (UAchieveViewWrapper* Item = *IdToItem.Find(EventId))
 			{
-				Entry->SetViewItem(&View);
-				Entry->SyncFromItem();	
-				
+				if (UUserWidget* Row = AchieveList->GetEntryWidgetFromItem(Item))
+				{
+					if (UAchievementEntryWidget* Entry = Cast<UAchievementEntryWidget>(Row))
+					{
+						Entry->SetViewItem(&View);
+						Entry->SyncFromItem();
+					}
+				}
 			}
 		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("UpdateAchieveEntry null"));
-		return;
 	}
 }
 
@@ -128,31 +101,50 @@ void UAchievementListWidget::HandleItemClicked(UObject* Item)
 	{	
 		if (UAchievementEntryWidget* Entry = Cast<UAchievementEntryWidget>(EntryWidget))
 		{
-			Entry->OffRedDot();
-
-			const FName* EventId = IdToItem.FindKey(Cast<UAchieveViewWrapper>(Item));
-			if (EventId)
+			if (Entry->HasRedDot())
 			{
-				if (UGameInstance* GI = GetGameInstance())
-				{
-					if (auto* SubSys = GI->GetSubsystem<URedDotSubSystem>())
-					{
-						SubSys->MarkSeen(*EventId);
-					}
-				}
+				Entry->OffRedDot();
 
-				if (UGameInstance* GI = GetGameInstance())
+				const FName* EventId = IdToItem.FindKey(Cast<UAchieveViewWrapper>(Item));
+				if (EventId)
 				{
-					if (UAchievementsSubsystem* SubSys = GI->GetSubsystem<UAchievementsSubsystem>())
+					if (UGameInstance* GI = GetGameInstance())
 					{
-						FAchievementState* State = SubSys->GetAchievementStateById(*EventId);
-						if (State->UnlockedTime != FDateTime::MinValue() && State->bRewardClaimed == false)
+						if (URedDotSubSystem* SubSys = GI->GetSubsystem<URedDotSubSystem>())
 						{
-							State->bRewardClaimed = true;
+							SubSys->MarkSeen(*EventId);
 						}
 					}
 				}
 			}
+			else
+			{
+				return;
+			}		
 		}
 	}	
+}
+
+void UAchievementListWidget::OnOffUI()
+{
+	ESlateVisibility Visible = GetVisibility();
+	switch (Visible)
+	{
+	case ESlateVisibility::Visible:
+
+		SetVisibility(ESlateVisibility::Hidden);
+		break;
+	case ESlateVisibility::Collapsed:
+		break;
+	case ESlateVisibility::Hidden:
+		RefreshAll();
+		SetVisibility(ESlateVisibility::Visible);
+		break;
+	case ESlateVisibility::HitTestInvisible:
+		break;
+	case ESlateVisibility::SelfHitTestInvisible:
+		break;
+	default:
+		break;
+	}
 }

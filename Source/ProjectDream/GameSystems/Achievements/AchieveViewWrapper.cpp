@@ -2,8 +2,3 @@
 
 
 #include "GameSystems/Achievements/AchieveViewWrapper.h"
-
-void UAchieveViewWrapper::TestRedDot()
-{
-	Data.bShowRedDot = false;
-}

@@ -23,10 +23,11 @@ class PROJECTDREAM_API UAchievementEntryWidget : public UUserWidget, public IUse
 	
 public:
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
-	void UpdateProgress();
 	void SyncFromItem();
 	void SetViewItem(FAchievementViewData* ViewItem);
 	void OffRedDot();
+	void OnRedDot();
+	bool HasRedDot();
 private:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UTextBlock> TextTitle;

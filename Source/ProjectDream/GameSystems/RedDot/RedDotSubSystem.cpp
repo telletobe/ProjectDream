@@ -22,13 +22,9 @@ void URedDotSubSystem::MarkSeen(const FName& EventId)
 	{
 		if (UAchievementsSubsystem* AchieveSubSys = GI->GetSubsystem<UAchievementsSubsystem>())
 		{
-			const TMap<FName,FAchievementState>& States = AchieveSubSys->GetAllAchievementState();
-			//TMap<FName, int32>& SeenMap = AchieveSubSys->GetSeenReivision();
-			if (const FAchievementState* State = States.Find(EventId))
-			{
-				//SeenMap.Add(EventId, State->Seen.GetRevision());
-				UE_LOG(LogTemp,Warning,TEXT("Call MarkSeen"));
-			}
+			FAchievementState* State = AchieveSubSys->GetAchievementStateById(EventId);
+			State->bRewardClaimed = true;
+			AchieveSubSys->RequestSave(AchieveSubSys->GetAllAchievementState());
 		}
 		else
 		{

@@ -46,7 +46,6 @@ void UAchievementsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 		}
 		DefsByEventType.FindOrAdd(Def.EventType).Add(Def);
-		//SeenRevisionById.FindOrAdd(Def.Id);
 	}
 
 	for (auto& State : LoadState)
@@ -142,15 +141,18 @@ void UAchievementsSubsystem::GetAllViewData(TArray<FAchievementViewData>& OutVie
 		ViewData.Title = Data.Value.Title;
 		ViewData.Description = Data.Value.Description;
 		ViewData.TargetValue = Data.Value.Target;
+		
 		if (AchievementState != nullptr)
 		{
 			ViewData.Progress = AchievementState->Progress;
 			ViewData.UnlockedTime = AchievementState->UnlockedTime;
+			ViewData.bRewardClaimed = AchievementState->bRewardClaimed;
 		}
 		else
 		{
 			ViewData.Progress = 0;
 			ViewData.UnlockedTime = FDateTime::MinValue();
+			ViewData.bRewardClaimed = true;
 		}
 		OutViewArr.Add(ViewData);
 		OutIdsArr.Add(AchievementID);
@@ -207,13 +209,11 @@ bool UAchievementsSubsystem::HandleAchivementEvent(FName& EventId)
 	return false;
 }
 
-void UAchievementsSubsystem::UpdateView(FAchievementViewData& OutViewData)
+void UAchievementsSubsystem::UpdateView(FAchievementViewData& OutViewData,FAchievementState& OutState)
 {
-	OutViewData.Progress++;
-	if (OutViewData.TargetValue <= OutViewData.Progress)
-	{
-		OutViewData.UnlockedTime = FDateTime::UtcNow();
-	}
+	OutViewData.Progress = OutState.Progress;
+	OutViewData.bRewardClaimed = OutState.bRewardClaimed;
+	OutViewData.UnlockedTime = OutState.UnlockedTime;
 }
 
 void UAchievementsSubsystem::UpdateState(FAchievementState& OutStateData, const FAchievementDef& OutDef)
@@ -234,21 +234,19 @@ void UAchievementsSubsystem::UpdateState(FAchievementState& OutStateData, const 
 	RequestSave(States);
 }
 
-void UAchievementsSubsystem::UpdateProgress(const FAchievementDef& OutDef,const FName& EventId)
+void UAchievementsSubsystem::UpdateProgress(const FName& EventId)
 {
 	FAchievementState* State = States.Find(EventId);
-	
+
 	if (!State) return;
-	if (State->UnlockedTime != FDateTime::MinValue()) return;
-	UE_LOG(LogTemp, Warning, TEXT("CALL UpdateProgress"));
+	if (State->UnlockedTime != FDateTime::MinValue() && State->bRewardClaimed == true) return;
 
-	UpdateState(*State, OutDef);
-
-	if (FAchievementViewData* Data = IdsByView.Find(OutDef.Id))
+	if (FAchievementViewData* Data = IdsByView.Find(EventId))
 	{
-		if (State->UnlockedTime != FDateTime::MinValue() && State->bRewardClaimed == false)	Data->bShowRedDot = true;
-		UpdateView(*Data);
+		UpdateView(*Data, *State);
 	}
+
+	UpdateState(*State, *Definition.Find(EventId));
 }
 
 void UAchievementsSubsystem::HandleLogin()
@@ -258,10 +256,10 @@ void UAchievementsSubsystem::HandleLogin()
 
 	for (const auto& Achievement : *AchievementDef)
 	{
-		UpdateProgress(Achievement, Achievement.Id);
+		UpdateProgress(Achievement.Id);
 		OnAchievementUpdated.Broadcast(Achievement.Id);
-		return;	
 	}
+	return;
 }
 
 void UAchievementsSubsystem::HandleItemAdded(EItemCategory ItemCategory, int32 ItemID)
@@ -278,8 +276,9 @@ void UAchievementsSubsystem::HandleItemAdded(EItemCategory ItemCategory, int32 I
 		{
 			if (!Result.bValid || !Result.bHasItemData) return;
 			if (ItemCategory != Result.ItemCat || ItemID != Result.ItemID)  continue;
-			UpdateProgress(Achievement, Achievement.Id);
+			UpdateProgress(Achievement.Id);
 			OnAchievementUpdated.Broadcast(Achievement.Id);
+			UE_LOG(LogTemp,Warning,TEXT("BroadCast"));
 		}
 	}
 }
