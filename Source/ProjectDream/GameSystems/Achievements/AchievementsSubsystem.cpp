@@ -26,10 +26,9 @@ void UAchievementsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	TArray<FAchievementState> LoadState;
 	LoadAchievementDef(AchieveDefs);
 
-	// 저장됀 SeenRevisionById 로딩 필요
+	// 업적 로딩
 	if (SaveJson::LoadArrayFromFile(AchievementsSlot, LoadState))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("SaveLoading Succeded"));
 	}
 							
 	for (const auto& Def : AchieveDefs)
@@ -120,7 +119,6 @@ void UAchievementsSubsystem::RequestSave(const TMap<FName, FAchievementState>& S
 		World->GetTimerManager().SetTimer(
 			SaveTimerHandle,this,&UAchievementsSubsystem::FlushPendingSave,SaveDelay
 		);
-		UE_LOG(LogTemp,Warning,TEXT("Call RequestSave"));
 	}
 	else
 	{
@@ -281,7 +279,6 @@ void UAchievementsSubsystem::HandleItemAdded(EItemCategory ItemCategory, int32 I
 			if (!Result.bValid || !Result.bHasItemData) return;
 			if (ItemCategory != Result.ItemCat || ItemID != Result.ItemID)  continue;
 			UpdateProgress(Achievement.Id);
-			UE_LOG(LogTemp,Warning,TEXT("BroadCast"));
 		}
 	}
 }

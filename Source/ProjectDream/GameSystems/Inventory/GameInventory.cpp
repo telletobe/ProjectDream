@@ -114,7 +114,6 @@ bool UGameInventory::AddToInventory(int32 NewItemID, EItemCategory NewItemCatego
 					return false;
 				}
 				FDreamGameItemInstance NewItem(NewItemID, NewItemCategory);
-				UE_LOG(LogTemp, Warning, TEXT("Item ID : %d"), NewItemID);
 				NewItem.MakeUniqueID();
 
 				// 인벤토리에 같은 아이템이 있는지 검색

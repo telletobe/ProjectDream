@@ -67,7 +67,6 @@ void UAchievementListWidget::RefreshAll()
 			AchieveList->SetListItems(Items);
 		}
 	}
-	UE_LOG(LogTemp,Warning,TEXT("Call RefreshAll"));
 }
 
 void UAchievementListWidget::UpdateAchieveEntry(const FName EventId)
