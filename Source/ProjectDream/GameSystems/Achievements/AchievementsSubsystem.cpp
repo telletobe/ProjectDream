@@ -27,9 +27,8 @@ void UAchievementsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	LoadAchievementDef(AchieveDefs);
 
 	// 업적 로딩
-	if (SaveJson::LoadArrayFromFile(AchievementsSlot, LoadState))
-	{
-	}
+	SaveJson::LoadArrayFromFile(AchievementsSlot, LoadState);
+
 							
 	for (const auto& Def : AchieveDefs)
 	{

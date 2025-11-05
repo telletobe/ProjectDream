@@ -12,13 +12,11 @@ void UQuantityPrompt::NativeConstruct()
 	if (ButtonOK)
 	{
 		ButtonOK->OnClicked.AddUniqueDynamic(this, &UQuantityPrompt::OnClickOK);
-		UE_LOG(LogTemp, Warning, TEXT("ButtonOK Bind"));
 	}
 
 	if (ButtonCancle)
 	{
 		ButtonCancle->OnClicked.AddUniqueDynamic(this, &UQuantityPrompt::OnClickCancle);
-		UE_LOG(LogTemp,Warning,TEXT("ButtonCancle Bind"));
 	}
 
 }

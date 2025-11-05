@@ -12,7 +12,6 @@
 void UAchievementListWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-
 	if (UGameInstance* GI = GetGameInstance())
 	{
 		if (auto* SubSys = GI->GetSubsystem<UAchievementsSubsystem>())
@@ -41,7 +40,6 @@ void UAchievementListWidget::NativeConstruct()
 void UAchievementListWidget::RefreshAll()
 {
 	if (!AchieveList) return;
-
 	IdToItem.Reset();
 	TArray<FAchievementViewData> Views;
 	TArray<FName> AchieveIds;
@@ -72,28 +70,7 @@ void UAchievementListWidget::RefreshAll()
 void UAchievementListWidget::UpdateAchieveEntry(const FName EventId)
 {
 	if (!AchieveList) return;
-
-	FAchievementViewData View;
-
-	if (UGameInstance* GI = GetGameInstance())
-	{
-		if (UAchievementsSubsystem* SubSys = GI->GetSubsystem<UAchievementsSubsystem>())
-		{
-			SubSys->GetViewDataById(View,EventId);
-
-			if (UAchieveViewWrapper* Item = *IdToItem.Find(EventId))
-			{
-				if (UUserWidget* Row = AchieveList->GetEntryWidgetFromItem(Item))
-				{
-					if (UAchievementEntryWidget* Entry = Cast<UAchievementEntryWidget>(Row))
-					{
-						Entry->SetViewItem(&View);
-						Entry->SyncFromItem();
-					}
-				}
-			}
-		}
-	}
+	RefreshAll();
 }
 
 void UAchievementListWidget::HandleItemClicked(UObject* Item)
