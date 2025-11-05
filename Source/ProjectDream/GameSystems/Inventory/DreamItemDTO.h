@@ -47,20 +47,21 @@ struct FDreamGameItemInstance
 {
 	GENERATED_BODY()
 public:
-	FDreamGameItemInstance() : InstancePair(INVALID_ITEM_ID,EItemCategory::Other), ItemStackCnt(0) {};
-	FDreamGameItemInstance(int32 ItemID, EItemCategory ItemCategory,int32 NewItemStackCnt = 1);
-	int32 GetItemID() const { return InstancePair.Key; }
+	FDreamGameItemInstance() : ItemID(-1),Category(EItemCategory::None), ItemStackCnt(0) {};
+	FDreamGameItemInstance(int32 NewItemID, EItemCategory NewItemCategory,int32 NewItemStackCnt = 1);
+	int32 GetItemID() const { return ItemID; }
 	bool AddItemStack(int32 NewITemStackCnt = 1);
 	int32 GetItemStackCnt() const { return ItemStackCnt; }
-	EItemCategory GetItemCategory() const { return InstancePair.Value; }
+	EItemCategory GetItemCategory() const { return Category; }
 	bool SetItemStackCnt(int32 CurrentItemStack);
 	bool operator== (const FDreamGameItemInstance& rhs) const;
 	bool MakeUniqueID();
 	FString GetUniqueID() const { return UniqueID.ToString(); }
 private:
-	TPair<int32, EItemCategory> InstancePair;
-	int32 ItemStackCnt = 0;
-	FGuid UniqueID;
+	UPROPERTY(SaveGame) int32 ItemID;
+	UPROPERTY(SaveGame) EItemCategory Category;
+	UPROPERTY(SaveGame) int32 ItemStackCnt = 0;
+	UPROPERTY(SaveGame) FGuid UniqueID;
 };
 
 USTRUCT()

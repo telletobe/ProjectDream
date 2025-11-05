@@ -15,7 +15,6 @@ void UAchievementEntryWidget::NativeOnListItemObjectSet(UObject* ListItemObject)
 	if (const UAchieveViewWrapper* Row = Cast<UAchieveViewWrapper>(ListItemObject))
 	{
 		Item = Row->Data;
-
 	}
 	SyncFromItem();
 }
@@ -40,7 +39,7 @@ void UAchievementEntryWidget::SyncFromItem()
 		}
 	}
 
-	if (Item.bRewardClaimed == false && Item.UnlockedTime != FDateTime::MinValue())
+	if (Item.UnlockedTime != FDateTime::MinValue() && Item.bRewardClaimed == false )
 	{
 		OnRedDot();
 	}

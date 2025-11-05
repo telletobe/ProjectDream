@@ -52,13 +52,10 @@ void AGameItem::Interact(ACharacter* Interactor)
 	UGameInventory* PlayerInv = UGameInventory::Get();
 	if (PlayerInv)
 	{
-		if (PlayerInv->AddToInventory({ GetItemID(), GetItemCategory() }, GetWorld()))
+		if (PlayerInv->AddToInventory(GetItemID(), GetItemCategory(), GetWorld()))
 		{
 			Destroy();
 		}
-	}
-	else
-	{
 	}
 }
 

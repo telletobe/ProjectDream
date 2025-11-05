@@ -50,6 +50,7 @@ void UDreamGameInventorySubsystem::Initialize(FSubsystemCollectionBase& Collecti
 	}
 
 	// 인벤토리 데이터 로딩
+	PlayerInventory->LoadInventoryData();
 }
 
 void UDreamGameInventorySubsystem::Deinitialize()

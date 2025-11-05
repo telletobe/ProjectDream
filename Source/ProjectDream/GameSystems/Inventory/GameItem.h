@@ -38,8 +38,8 @@ protected:
 private:
 	UPROPERTY(EditAnywhere) TObjectPtr<class UBoxComponent> BoxCollision;
 	UPROPERTY(EditAnywhere)	TObjectPtr<class UStaticMeshComponent> BoxMesh;
-	UPROPERTY(EditAnywhere, Category="Item") int32 ItemID =-1;
-	UPROPERTY(EditAnywhere, Category = "Item") EItemCategory ItemType;
-	UPROPERTY(EditAnywhere, Category = "Item") int32 CurrentItemCnt = 1;
+	UPROPERTY(EditAnywhere, Category="ItemData") int32 ItemID =-1;
+	UPROPERTY(EditAnywhere, Category = "ItemData") EItemCategory ItemType;
+	UPROPERTY(EditAnywhere, Category = "ItemData") int32 CurrentItemCnt = 1;
 	UPROPERTY()	TWeakObjectPtr<ACharacter> BoundCharacter;
 };

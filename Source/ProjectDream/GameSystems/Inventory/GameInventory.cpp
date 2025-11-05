@@ -9,40 +9,41 @@
 // 아이템 데이터가 없으면 아이템 카테고리가 None
 
 TObjectPtr<UGameInventory> UGameInventory::Instance = nullptr;
+static const FString SaveInventory = TEXT("Inventory");
 
-bool UGameInventory::Init(int32 InvSize) 
+void UGameInventory::Init(int32 InvSize) 
 {
 	InventoryData.Init(FDreamGameItemInstance(), InvSize);
-	if (InventoryData.Num() <= 0)
-	{
-		return false;
-	}
-	else
-	{
-		return true;
-	}
 }
 
 bool UGameInventory::SaveInventoryData()
 {
-	if (!SaveJson::SaveArrayToFile(TEXT("Inventory"), InventoryData))
+	if (!SaveJson::SaveArrayToFile(SaveInventory, InventoryData))
 	{
 		return false;
 	}
 	return true;
 }
 
-
-bool UGameInventory::SetInventoryData(TArray<FDreamGameItemInstance> LoadData)
+bool UGameInventory::LoadInventoryData()
 {
-	if (LoadData.IsEmpty())
+	TArray<FDreamGameItemInstance> LoadData;
+	if (SaveJson::LoadArrayFromFile(SaveInventory, LoadData))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Array Is Empty"));
+		InventoryData = LoadData;
+		ChangeInventoryData.Broadcast();
+		return true;
+	}
+	return false;
+}
+
+
+bool UGameInventory::SetInventoryData()
+{
+	if (!LoadInventoryData())
+	{
 		return false;
 	}
-
-	InventoryData = LoadData;
-
 	ChangeInventoryData.Broadcast();
 	return true;
 }
@@ -92,11 +93,12 @@ UGameInventory* UGameInventory::Get()
 }
 
 // 현재 아이템은 1개씩만 들어온다고 가정, Qty는 활용하지않음.
-bool UGameInventory::AddToInventory(TPair<int32, EItemCategory> NewItmeKeyPair, UWorld* CurrentWorld, int32 NewItemQty)
+bool UGameInventory::AddToInventory(int32 NewItemID, EItemCategory NewItemCategory, UWorld* CurrentWorld, int32 NewItemQty)
 {
 	int32 EmptySlot = FindEmptySlotIndex();
 	if (EmptySlot == INDEX_NONE) 
 	{
+		
 		return false;
 	}
 
@@ -106,12 +108,13 @@ bool UGameInventory::AddToInventory(TPair<int32, EItemCategory> NewItmeKeyPair, 
 		{
 			if (const UDreamGameInventorySubsystem* InvSubSys = GI->GetSubsystem<UDreamGameInventorySubsystem>())
 			{
-				const FDreamGameItemDef* ItemDef = InvSubSys->GetItemDefByKey(NewItmeKeyPair.Key, NewItmeKeyPair.Value);
+				const FDreamGameItemDef* ItemDef = InvSubSys->GetItemDefByKey(NewItemID, NewItemCategory);
 				if (!ItemDef) 
 				{
 					return false;
 				}
-				FDreamGameItemInstance NewItem(NewItmeKeyPair.Key, NewItmeKeyPair.Value);
+				FDreamGameItemInstance NewItem(NewItemID, NewItemCategory);
+				UE_LOG(LogTemp, Warning, TEXT("Item ID : %d"), NewItemID);
 				NewItem.MakeUniqueID();
 
 				// 인벤토리에 같은 아이템이 있는지 검색
@@ -126,10 +129,12 @@ bool UGameInventory::AddToInventory(TPair<int32, EItemCategory> NewItmeKeyPair, 
 						// 기존에 할당되어있는 인벤토리 공간중 빈 곳을 순회해서 찾음.
 						InventoryData[EmptySlot] = NewItem;
 						InventoryData[EmptySlot].SetItemStackCnt(ToMoveStackCnt);
+						SaveInventoryData();
 						ItemAddedBroadCast(NewItem.GetItemCategory(), NewItem.GetItemID());
 						return true;
 					}
 					InventoryData[FindItemIdx].AddItemStack(NewItem.GetItemStackCnt());
+					SaveInventoryData();
 					ItemAddedBroadCast(NewItem.GetItemCategory(), NewItem.GetItemID());
 					return true;
 				}
@@ -137,6 +142,7 @@ bool UGameInventory::AddToInventory(TPair<int32, EItemCategory> NewItmeKeyPair, 
 				else
 				{
 					InventoryData[EmptySlot] = NewItem;
+					SaveInventoryData();
 					ItemAddedBroadCast(NewItem.GetItemCategory(), NewItem.GetItemID());
 					return true;
 				}

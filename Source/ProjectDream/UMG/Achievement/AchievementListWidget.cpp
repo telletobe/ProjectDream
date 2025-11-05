@@ -67,13 +67,15 @@ void UAchievementListWidget::RefreshAll()
 			AchieveList->SetListItems(Items);
 		}
 	}
+	UE_LOG(LogTemp,Warning,TEXT("Call RefreshAll"));
 }
 
 void UAchievementListWidget::UpdateAchieveEntry(const FName EventId)
 {
 	if (!AchieveList) return;
 
-	FAchievementViewData View{};
+	FAchievementViewData View;
+
 	if (UGameInstance* GI = GetGameInstance())
 	{
 		if (UAchievementsSubsystem* SubSys = GI->GetSubsystem<UAchievementsSubsystem>())
@@ -116,6 +118,10 @@ void UAchievementListWidget::HandleItemClicked(UObject* Item)
 						}
 					}
 				}
+				else
+				{
+					return;
+				}
 			}
 			else
 			{
@@ -128,16 +134,15 @@ void UAchievementListWidget::HandleItemClicked(UObject* Item)
 void UAchievementListWidget::OnOffUI()
 {
 	ESlateVisibility Visible = GetVisibility();
+
 	switch (Visible)
 	{
 	case ESlateVisibility::Visible:
-
 		SetVisibility(ESlateVisibility::Hidden);
 		break;
 	case ESlateVisibility::Collapsed:
 		break;
 	case ESlateVisibility::Hidden:
-		RefreshAll();
 		SetVisibility(ESlateVisibility::Visible);
 		break;
 	case ESlateVisibility::HitTestInvisible:

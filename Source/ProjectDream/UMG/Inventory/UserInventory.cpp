@@ -40,6 +40,8 @@ void UUserInventory::NativeConstruct()
 	{
 		Inv->ChangeInventoryData.AddUniqueDynamic(this, &UUserInventory::UpdateInventoryUI);
 	}
+
+	UpdateInventoryUI();
 }
 
 void UUserInventory::NativeOnInitialized()

@@ -19,21 +19,22 @@ public:
 	FOnInventoryItemAdded OnItemAdded;
 public :
 	static UGameInventory* Get();
-	bool Init(int32 InvSize = 30);
-	bool AddToInventory(TPair<int32,EItemCategory> NewItmeKeyPair,UWorld* CurrentWorld, int32 NewItemQty = 1);
-	bool SetInventoryData(TArray<FDreamGameItemInstance> LoadData);
+	void Init(int32 InvSize = 30);
+	bool AddToInventory(int32 NewItemID, EItemCategory NewItemCategory,UWorld* CurrentWorld, int32 NewItemQty = 1);
 	int32 GetInventorySize() const { return InventoryData.Num(); }
 	TArray<FDreamGameItemInstance> GetInventoryData() const { return InventoryData; }
 	const FDreamGameItemInstance& GetInventoryDataByIdx(int32 Index) const { return InventoryData[Index]; }
-	bool SaveInventoryData();
 	float GetInventoryWeight() const;
-
+	bool LoadInventoryData();
+	bool SetInventoryData();
+private:
+	bool SaveInventoryData();
 private:
 	UGameInventory();
 	int32 FindEmptySlotIndex();
 	void ItemAddedBroadCast(EItemCategory Category, int32 ItemID);
 private:
 	static TObjectPtr<UGameInventory> Instance;
-	TArray<FDreamGameItemInstance> InventoryData;
+	UPROPERTY(SaveGame) TArray<FDreamGameItemInstance> InventoryData;
 
 };

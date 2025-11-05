@@ -15,7 +15,7 @@ bool FDreamGameItemDef::operator!=(const FDreamGameItemDef& Other) const
 
 bool FDreamGameItemInstance::MakeUniqueID()
 {
-	if (InstancePair.Value == EItemCategory::Equipment)
+	if (Category == EItemCategory::Equipment)
 	{
 		UniqueID = FGuid::NewGuid();
 		return true;
@@ -24,10 +24,10 @@ bool FDreamGameItemInstance::MakeUniqueID()
 	return false;
 }
 
-FDreamGameItemInstance::FDreamGameItemInstance(int32 ItemID, EItemCategory ItemCategory, int32 NewItemStackCnt)
+FDreamGameItemInstance::FDreamGameItemInstance(int32 NewItemID, EItemCategory NewItemCategory, int32 NewItemStackCnt)
 {
-	InstancePair.Key = ItemID;
-	InstancePair.Value = ItemCategory;
+	ItemID = NewItemID;
+	Category = NewItemCategory;
 	ItemStackCnt += NewItemStackCnt;
 }
 
@@ -47,9 +47,9 @@ bool FDreamGameItemInstance::SetItemStackCnt(int32 CurrentItemStack)
 
 bool FDreamGameItemInstance::operator==(const FDreamGameItemInstance& rhs) const
 {
-	if (InstancePair.Key == rhs.GetItemID())
+	if (ItemID == rhs.GetItemID())
 	{
-		if (InstancePair.Value == rhs.GetItemCategory())
+		if (Category == rhs.GetItemCategory())
 		{
 			return GetUniqueID().Equals(rhs.GetUniqueID());
 		}

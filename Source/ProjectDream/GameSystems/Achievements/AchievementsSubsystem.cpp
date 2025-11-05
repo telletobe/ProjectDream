@@ -43,7 +43,6 @@ void UAchievementsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		if (State.Id.IsNone())          // 로드본에 Id가 비어있을 수도 있음
 		{
 			State.Id = Def.Id;          // 반드시 보정		
-
 		}
 		DefsByEventType.FindOrAdd(Def.EventType).Add(Def);
 	}
@@ -152,7 +151,7 @@ void UAchievementsSubsystem::GetAllViewData(TArray<FAchievementViewData>& OutVie
 		{
 			ViewData.Progress = 0;
 			ViewData.UnlockedTime = FDateTime::MinValue();
-			ViewData.bRewardClaimed = true;
+			ViewData.bRewardClaimed = false;
 		}
 		OutViewArr.Add(ViewData);
 		OutIdsArr.Add(AchievementID);
@@ -237,16 +236,22 @@ void UAchievementsSubsystem::UpdateState(FAchievementState& OutStateData, const 
 void UAchievementsSubsystem::UpdateProgress(const FName& EventId)
 {
 	FAchievementState* State = States.Find(EventId);
+	FAchievementViewData* Data = IdsByView.Find(EventId);
 
 	if (!State) return;
-	if (State->UnlockedTime != FDateTime::MinValue() && State->bRewardClaimed == true) return;
-
-	if (FAchievementViewData* Data = IdsByView.Find(EventId))
+	if (State->UnlockedTime != FDateTime::MinValue() && State->bRewardClaimed == true)
 	{
-		UpdateView(*Data, *State);
+		return;
+	}
+	else if (State->UnlockedTime != FDateTime::MinValue() && State->bRewardClaimed == false)
+	{
+		return;
 	}
 
 	UpdateState(*State, *Definition.Find(EventId));
+	if (!Data) return;
+	UpdateView(*Data, *State);
+	OnAchievementUpdated.Broadcast(EventId);
 }
 
 void UAchievementsSubsystem::HandleLogin()
@@ -257,7 +262,6 @@ void UAchievementsSubsystem::HandleLogin()
 	for (const auto& Achievement : *AchievementDef)
 	{
 		UpdateProgress(Achievement.Id);
-		OnAchievementUpdated.Broadcast(Achievement.Id);
 	}
 	return;
 }
@@ -277,7 +281,6 @@ void UAchievementsSubsystem::HandleItemAdded(EItemCategory ItemCategory, int32 I
 			if (!Result.bValid || !Result.bHasItemData) return;
 			if (ItemCategory != Result.ItemCat || ItemID != Result.ItemID)  continue;
 			UpdateProgress(Achievement.Id);
-			OnAchievementUpdated.Broadcast(Achievement.Id);
 			UE_LOG(LogTemp,Warning,TEXT("BroadCast"));
 		}
 	}
