@@ -40,7 +40,6 @@ void UAchievementListWidget::NativeConstruct()
 void UAchievementListWidget::RefreshAll()
 {
 	if (!AchieveList) return;
-	AchieveList->ClearListItems();
 	TArray<UObject*> Items;
 
 	if (bInitailize)
@@ -70,11 +69,12 @@ void UAchievementListWidget::RefreshAll()
 				SubSys->GetAllViewData(Views, AchieveIds);
 
 				BulidItemsAndIdMap(Views, AchieveIds, Items);
+				AchieveList->SetListItems(Items);
 			}
 		}
 	}
 
-	AchieveList->SetListItems(Items);
+
 }
 
 bool UAchievementListWidget::BulidItemsAndIdMap(const TArray<FAchievementViewData>& Views, const TArray<FName>& AchieveIds, TArray<UObject*>& OutItems)
