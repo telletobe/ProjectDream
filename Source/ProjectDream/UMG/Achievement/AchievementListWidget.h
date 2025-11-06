@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "../../GameSystems/Achievements/AchievementViewData.h"
 #include "AchievementListWidget.generated.h"
 
 class UAchieveViewWrapper;
@@ -17,9 +18,12 @@ public:
 private:
 	UFUNCTION()	void OnOffUI();
 	void RefreshAll();
-	UFUNCTION()	void UpdateAchieveEntry(const FName EventId);
+	bool BulidItemsAndIdMap(const TArray<FAchievementViewData>& Views, const TArray<FName>& AchieveIds, TArray<UObject*>& OutItems);
+	UFUNCTION()	void UpdateAchieveEntry(FName EventId);
+	UFUNCTION() void HandleItemClicked(UObject* Item);
+	void SyncMapToId(FName& EventId);
+private:
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<class UListView> AchieveList;
 	UPROPERTY() TMap<FName, UAchieveViewWrapper*> IdToItem;
-	//---------------------------------------------------------------
-	UFUNCTION() void HandleItemClicked(UObject* Item);
+	bool bInitailize = false;
 };

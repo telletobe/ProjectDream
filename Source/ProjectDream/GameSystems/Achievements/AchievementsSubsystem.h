@@ -10,7 +10,7 @@
 #include "AchievementViewData.h"
 #include "AchievementsSubsystem.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAchievementUpdated, FName , Id);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAchievementUpdated,FName, EventId);
 
 UCLASS(config=Game, DefaultConfig)
 class PROJECTDREAM_API UAchievementsSubsystem : public UGameInstanceSubsystem

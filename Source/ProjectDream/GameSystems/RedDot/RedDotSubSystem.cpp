@@ -23,7 +23,10 @@ void URedDotSubSystem::MarkSeen(const FName& EventId)
 		if (UAchievementsSubsystem* AchieveSubSys = GI->GetSubsystem<UAchievementsSubsystem>())
 		{
 			FAchievementState* State = AchieveSubSys->GetAchievementStateById(EventId);
+			FAchievementViewData View{};
+			AchieveSubSys->GetViewDataById(View,EventId);
 			State->bRewardClaimed = true;
+			View.bRewardClaimed = true;
 			AchieveSubSys->RequestSave(AchieveSubSys->GetAllAchievementState());
 		}
 		else

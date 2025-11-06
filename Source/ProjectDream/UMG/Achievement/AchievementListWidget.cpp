@@ -40,41 +40,74 @@ void UAchievementListWidget::NativeConstruct()
 void UAchievementListWidget::RefreshAll()
 {
 	if (!AchieveList) return;
-	IdToItem.Reset();
-	TArray<FAchievementViewData> Views;
-	TArray<FName> AchieveIds;
+	AchieveList->ClearListItems();
+	TArray<UObject*> Items;
 
-	if (UGameInstance* GI = GetGameInstance())
+	if (bInitailize)
 	{
-		if (UAchievementsSubsystem* SubSys = GI->GetSubsystem<UAchievementsSubsystem>())
+		Items.Reserve(IdToItem.Num());
+
+		// IdToItem의 Value(Wrapper)들만 모아서 다시 SetListItems
+		for (auto& Elem : IdToItem)
 		{
-			SubSys->GetAllViewData(Views, AchieveIds);
-
-			AchieveList->ClearListItems();
-
-			TArray<UObject*> Items;
-			Items.Reserve(Views.Num());
-
-			for (int32 i = 0; i < Views.Num(); i++)
+			if (Elem.Value)
 			{
-				auto* Row = NewObject<UAchieveViewWrapper>(this);
-				Row->Data = Views[i];
-				Items.Add(Row);
-				IdToItem.Add(AchieveIds[i], Row);
+				Items.Add(Elem.Value);
 			}
-			AchieveList->SetListItems(Items);
+		}
+		AchieveList->RegenerateAllEntries();
+	}
+	else
+	{
+		if (UGameInstance* GI = GetGameInstance())
+		{
+			if (UAchievementsSubsystem* SubSys = GI->GetSubsystem<UAchievementsSubsystem>())
+			{
+				TArray<FAchievementViewData> Views;
+				TArray<FName> AchieveIds;
+
+				AchieveList->ClearListItems();
+				SubSys->GetAllViewData(Views, AchieveIds);
+
+				BulidItemsAndIdMap(Views, AchieveIds, Items);
+			}
 		}
 	}
+
+	AchieveList->SetListItems(Items);
 }
 
-void UAchievementListWidget::UpdateAchieveEntry(const FName EventId)
+bool UAchievementListWidget::BulidItemsAndIdMap(const TArray<FAchievementViewData>& Views, const TArray<FName>& AchieveIds, TArray<UObject*>& OutItems)
 {
-	if (!AchieveList) return;
+	if (bInitailize) return false;
+	check(Views.Num() == AchieveIds.Num());
+
+	OutItems.Reset();
+	OutItems.Reserve(Views.Num());
+
+	for (int32 i = 0; i < Views.Num(); ++i)
+	{
+		auto* Row = NewObject<UAchieveViewWrapper>(this);
+		Row->Data = Views[i];
+
+		OutItems.Add(Row);
+		IdToItem.Add(AchieveIds[i], Row);
+	}
+
+	bInitailize = true;
+	return true;
+}
+
+void UAchievementListWidget::UpdateAchieveEntry(FName EventId)
+{
+	if (!AchieveList) return;	
+	SyncMapToId(EventId);
 	RefreshAll();
 }
 
 void UAchievementListWidget::HandleItemClicked(UObject* Item)
 {
+	UE_LOG(LogTemp,Warning,TEXT("Call HanelItemCilcked"));
 	if (UUserWidget* EntryWidget = AchieveList->GetEntryWidgetFromItem(Item))
 	{	
 		if (UAchievementEntryWidget* Entry = Cast<UAchievementEntryWidget>(EntryWidget))
@@ -105,6 +138,26 @@ void UAchievementListWidget::HandleItemClicked(UObject* Item)
 			}		
 		}
 	}	
+}
+
+void UAchievementListWidget::SyncMapToId(FName& EventId)
+{
+	FAchievementViewData NewView;
+
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		if (UAchievementsSubsystem* SubSys = GI->GetSubsystem<UAchievementsSubsystem>())
+		{
+			SubSys->GetViewDataById(NewView, EventId);
+
+			UAchieveViewWrapper* RowPtr = *IdToItem.Find(EventId);
+			if (!RowPtr)
+			{
+				return;
+			}
+			RowPtr->Data = NewView;
+		}
+	}
 }
 
 void UAchievementListWidget::OnOffUI()

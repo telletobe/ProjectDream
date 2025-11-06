@@ -127,6 +127,15 @@ void UAchievementsSubsystem::RequestSave(const TMap<FName, FAchievementState>& S
 
 void UAchievementsSubsystem::GetAllViewData(TArray<FAchievementViewData>& OutViewArr, TArray<FName>& OutIdsArr)
 {
+	if (IdsByView.Num() != 0)
+	{
+		for (const auto& Elem : IdsByView)
+		{
+			OutIdsArr.Add(Elem.Key);
+			OutViewArr.Add(Elem.Value);
+		}
+		return;
+	}
 	// View 새로 생성
 	for (const auto& Data : Definition)
 	{

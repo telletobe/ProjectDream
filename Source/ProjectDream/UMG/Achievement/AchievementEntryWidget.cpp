@@ -52,6 +52,7 @@ void UAchievementEntryWidget::SetViewItem(FAchievementViewData* ViewItem)
 
 void UAchievementEntryWidget::OffRedDot()
 {
+	Item.bRewardClaimed = true;
 	if (RedDot)
 	{
 		RedDot->SetVisibility(ESlateVisibility::Hidden);
