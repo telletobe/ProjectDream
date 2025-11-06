@@ -12,34 +12,41 @@ void UAchievementEntryWidget::NativeOnListItemObjectSet(UObject* ListItemObject)
 {
 	if (!ListItemObject)  return;
 
-	if (const UAchieveViewWrapper* Row = Cast<UAchieveViewWrapper>(ListItemObject))
+	if (UAchieveViewWrapper* Row = Cast<UAchieveViewWrapper>(ListItemObject))
 	{
-		Item = Row->Data;
+		if (!Row)
+		{
+			Item = nullptr;
+			return;
+		}
+		Item = &Row->Data;
 	}
 	SyncFromItem();
 }
 
 void UAchievementEntryWidget::SyncFromItem()
 {
-	if (TextTitle) TextTitle->SetText(Item.Title);
-	if (DescText) DescText->SetText(Item.Description);
-	if (ProgressText) ProgressText->SetText(Item.GetProgressText());
-	if (StatusText) StatusText->SetText(Item.GetStatusText());
+	if (!Item) return;
+
+	if (TextTitle) TextTitle->SetText(Item->Title);
+	if (DescText) DescText->SetText(Item->Description);
+	if (ProgressText) ProgressText->SetText(Item->GetProgressText());
+	if (StatusText) StatusText->SetText(Item->GetStatusText());
 
 	if (AchieveClear)
 	{
-		if (Item.UnlockedTime != FDateTime::MinValue())
+		if (Item->UnlockedTime != FDateTime::MinValue())
 		{
 			AchieveClear->SetPercent(1.0f);
 		}
-		else if (Item.TargetValue > 0)
+		else if (Item->TargetValue > 0)
 		{
-			float Percent = (float)Item.Progress / (float)Item.TargetValue;
+			float Percent = (float)Item->Progress / (float)Item->TargetValue;
 			AchieveClear->SetPercent(Percent);
 		}
 	}
 
-	if (Item.UnlockedTime != FDateTime::MinValue() && Item.bRewardClaimed == false )
+	if (Item->UnlockedTime != FDateTime::MinValue() && Item->bRewardClaimed == false )
 	{
 		OnRedDot();
 	}
@@ -47,12 +54,13 @@ void UAchievementEntryWidget::SyncFromItem()
 
 void UAchievementEntryWidget::SetViewItem(FAchievementViewData* ViewItem)
 {
-	Item = *ViewItem;
+	Item = ViewItem;
 }
 
 void UAchievementEntryWidget::OffRedDot()
 {
-	Item.bRewardClaimed = true;
+	if (!Item) return;
+	Item->bRewardClaimed = true;
 	if (RedDot)
 	{
 		RedDot->SetVisibility(ESlateVisibility::Hidden);

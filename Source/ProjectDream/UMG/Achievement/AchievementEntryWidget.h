@@ -46,5 +46,5 @@ private:
 
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UBorder> RedDot;
 
-	UPROPERTY() FAchievementViewData Item;
+	FAchievementViewData* Item = nullptr;
 };
