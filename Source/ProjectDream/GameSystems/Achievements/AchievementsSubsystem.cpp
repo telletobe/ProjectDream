@@ -3,7 +3,6 @@
 
 #include "GameSystems/Achievements/AchievementsSubsystem.h"
 #include "DreamAchievements.h"
-#include "AchievementViewData.h"
 #include <Kismet/GameplayStatics.h>
 #include "../Save/JsonSaveGame.h"
 #include <GameSystems/Save/DreamSaveGame.h>
@@ -43,6 +42,7 @@ void UAchievementsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 			State.Id = Def.Id;          // 반드시 보정		
 		}
 		DefsByEventType.FindOrAdd(Def.EventType).Add(Def);
+		AchievementIds.Add(Def.Id);
 	}
 
 	for (auto& State : LoadState)
@@ -125,56 +125,6 @@ void UAchievementsSubsystem::RequestSave(const TMap<FName, FAchievementState>& S
 	}
 }
 
-void UAchievementsSubsystem::GetAllViewData(TArray<FAchievementViewData>& OutViewArr, TArray<FName>& OutIdsArr)
-{
-	if (IdsByView.Num() != 0)
-	{
-		for (const auto& Elem : IdsByView)
-		{
-			OutIdsArr.Add(Elem.Key);
-			OutViewArr.Add(Elem.Value);
-		}
-		return;
-	}
-	// View 새로 생성
-	for (const auto& Data : Definition)
-	{
-		FAchievementViewData ViewData;
-		const FName& AchievementID = Data.Value.Id;
-		const FAchievementState* AchievementState = GetAchievementStateById(AchievementID);
-
-		ViewData.Title = Data.Value.Title;
-		ViewData.Description = Data.Value.Description;
-		ViewData.TargetValue = Data.Value.Target;
-		
-		if (AchievementState != nullptr)
-		{
-			ViewData.Progress = AchievementState->Progress;
-			ViewData.UnlockedTime = AchievementState->UnlockedTime;
-			ViewData.bRewardClaimed = AchievementState->bRewardClaimed;
-		}
-		else
-		{
-			ViewData.Progress = 0;
-			ViewData.UnlockedTime = FDateTime::MinValue();
-			ViewData.bRewardClaimed = false;
-		}
-		OutViewArr.Add(ViewData);
-		OutIdsArr.Add(AchievementID);
-		IdsByView.Add({AchievementID,ViewData});
-	}
-	return;
-}
-
-void UAchievementsSubsystem::GetViewDataById(FAchievementViewData& OutView,const FName& EventId)
-{
-	if (IdsByView.Num() == 0) return;
-	if (IdsByView.Find(EventId))
-	{
-		OutView = *IdsByView.Find(EventId);
-	}
-}
-
 void UAchievementsSubsystem::FlushPendingSave()
 {
 	UE_LOG(LogTemp,Warning,TEXT("Call FlushPending Save"));
@@ -214,13 +164,6 @@ bool UAchievementsSubsystem::HandleAchivementEvent(FName& EventId)
 	return false;
 }
 
-void UAchievementsSubsystem::UpdateView(FAchievementViewData& OutViewData,FAchievementState& OutState)
-{
-	OutViewData.Progress = OutState.Progress;
-	OutViewData.bRewardClaimed = OutState.bRewardClaimed;
-	OutViewData.UnlockedTime = OutState.UnlockedTime;
-}
-
 void UAchievementsSubsystem::UpdateState(FAchievementState& OutStateData, const FAchievementDef& OutDef)
 {
 	if (OutDef.AchieveType == EAchievementType::Instant)
@@ -242,7 +185,6 @@ void UAchievementsSubsystem::UpdateState(FAchievementState& OutStateData, const 
 void UAchievementsSubsystem::UpdateProgress(const FName& EventId)
 {
 	FAchievementState* State = States.Find(EventId);
-	FAchievementViewData* Data = IdsByView.Find(EventId);
 
 	if (!State) return;
 	if (State->UnlockedTime != FDateTime::MinValue() && State->bRewardClaimed == true)
@@ -255,8 +197,6 @@ void UAchievementsSubsystem::UpdateProgress(const FName& EventId)
 	}
 
 	UpdateState(*State, *Definition.Find(EventId));
-	if (!Data) return;
-	UpdateView(*Data, *State);
 	OnAchievementUpdated.Broadcast(EventId);
 }
 

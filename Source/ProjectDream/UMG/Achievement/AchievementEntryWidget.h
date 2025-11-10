@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "../../GameSystems/Achievements/AchievementViewData.h"
+#include "../../GameSystems/Achievements/DreamAchievements.h"
 #include "Blueprint/IUserObjectListEntry.h"
 #include "AchievementEntryWidget.generated.h"
 
@@ -23,11 +23,9 @@ class PROJECTDREAM_API UAchievementEntryWidget : public UUserWidget, public IUse
 	
 public:
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
-	void SyncFromItem();
-	void SetViewItem(FAchievementViewData* ViewItem);
-	void OffRedDot();
-	void OnRedDot();
-	bool HasRedDot();
+	void SyncFromItem(UObject* ListItemObject);
+	FText GetProgressText(const FAchievementDef* Def,const FAchievementState* State) const;
+	FText GetStatusText(const FAchievementState* State) const;
 private:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UTextBlock> TextTitle;
@@ -43,8 +41,4 @@ private:
 	
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UProgressBar> AchieveClear;
-
-	UPROPERTY(meta = (BindWidget)) TObjectPtr<UBorder> RedDot;
-
-	FAchievementViewData* Item = nullptr;
 };

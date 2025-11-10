@@ -7,7 +7,6 @@
 #include "DreamAchievements.h"
 #include "../RedDot/RedDotState.h"
 #include "../Inventory/DreamItemDTO.h"
-#include "AchievementViewData.h"
 #include "AchievementsSubsystem.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAchievementUpdated,FName, EventId);
@@ -29,13 +28,11 @@ public:
 	FAchievementState* GetAchievementStateById(const FName& EventId);
 	const TMap <FName, FAchievementDef>& GetAllAchievementDef() const;
 	const TMap<FName, FAchievementState>& GetAllAchievementState() const;
-	void GetAllViewData(TArray<FAchievementViewData>& OutViewArr, TArray<FName>& OutIdsArr);
-	void GetViewDataById(FAchievementViewData& OutView,const FName& EventId);
+	const TArray<FName>& GetAllAchievementIds() const { return AchievementIds; }
 	UFUNCTION()	void DispatchAchivementEvent(EItemCategory ItemCategory, int32 ItemID);
 public:
 	void RequestSave(const TMap<FName,FAchievementState>& StateData);
 private:
-	void UpdateView(FAchievementViewData& OutViewData , FAchievementState& OutState);
 	void UpdateState(FAchievementState& OutStateData, const FAchievementDef& OutDef);
 	void UpdateProgress(const FName& EventId);
 	bool HandleAchivementEvent(FName& EventId);
@@ -53,10 +50,11 @@ private:
 	FTimerHandle SaveTimerHandle;
 	float SaveDelay = 2.0f;
 
+	TArray<FName> AchievementIds;
 	TMap <FName, FAchievementDef> Definition;
 	TMap<EClearRule, TArray<FAchievementDef>> DefsByEventType;
-	TMap<FName, FAchievementViewData> IdsByView;
 	UPROPERTY() TMap<FName, FAchievementState> States;
+
 };
 
 namespace AchievementIDParse

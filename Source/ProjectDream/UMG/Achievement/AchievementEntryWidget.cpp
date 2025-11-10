@@ -1,9 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "UMG/Achievement/AchievementEntryWidget.h"
-#include "../GameSystems/Achievements/AchieveViewWrapper.h"
+#include "../GameSystems/Achievements/AchievementView.h"
 #include "../GameSystems/Achievements/AchievementsSubsystem.h"
+#include "../GameSystems/Achievements/DreamAchievements.h"
 #include "Components/TextBlock.h"
 #include "Components/Border.h"
 #include "Components/ProgressBar.h"
@@ -12,83 +13,57 @@ void UAchievementEntryWidget::NativeOnListItemObjectSet(UObject* ListItemObject)
 {
 	if (!ListItemObject)  return;
 
-	if (UAchieveViewWrapper* Row = Cast<UAchieveViewWrapper>(ListItemObject))
-	{
-		if (!Row)
-		{
-			Item = nullptr;
-			return;
-		}
-		Item = &Row->Data;
-	}
-	SyncFromItem();
+	SyncFromItem(ListItemObject);
 }
 
-void UAchievementEntryWidget::SyncFromItem()
+void UAchievementEntryWidget::SyncFromItem(UObject* ListItemObject)
 {
+	if (!ListItemObject) return;
+
+	UAchievementView* Item = Cast< UAchievementView>(ListItemObject);
 	if (!Item) return;
-
-	if (TextTitle) TextTitle->SetText(Item->Title);
-	if (DescText) DescText->SetText(Item->Description);
-	if (ProgressText) ProgressText->SetText(Item->GetProgressText());
-	if (StatusText) StatusText->SetText(Item->GetStatusText());
-
-	if (AchieveClear)
+	
+	if (UGameInstance* GI = GetGameInstance())
 	{
-		if (Item->UnlockedTime != FDateTime::MinValue())
+		if (UAchievementsSubsystem* SubSys = GI->GetSubsystem<UAchievementsSubsystem>())
 		{
-			AchieveClear->SetPercent(1.0f);
-		}
-		else if (Item->TargetValue > 0)
-		{
-			float Percent = (float)Item->Progress / (float)Item->TargetValue;
-			AchieveClear->SetPercent(Percent);
-		}
-	}
+			const FAchievementState* State = SubSys->GetAchievementStateById(Item->AchievementID);
+			const FAchievementDef* Def = SubSys->GetAchievementDefById(Item->AchievementID);
 
-	if (Item->UnlockedTime != FDateTime::MinValue() && Item->bRewardClaimed == false )
-	{
-		OnRedDot();
-	}
-}
+			if (!State || !Def) return;
 
-void UAchievementEntryWidget::SetViewItem(FAchievementViewData* ViewItem)
-{
-	Item = ViewItem;
-}
+			if (TextTitle) TextTitle->SetText(Def->Title);
+			if (DescText) DescText->SetText(Def->Description);
+			if (ProgressText) ProgressText->SetText(GetProgressText(Def,State));
+			if (StatusText) StatusText->SetText(GetStatusText(State));
 
-void UAchievementEntryWidget::OffRedDot()
-{
-	if (!Item) return;
-	Item->bRewardClaimed = true;
-	if (RedDot)
-	{
-		RedDot->SetVisibility(ESlateVisibility::Hidden);
-	}
-}
-
-void UAchievementEntryWidget::OnRedDot()
-{
-	if (RedDot)
-	{
-		RedDot->SetVisibility(ESlateVisibility::Visible);
-	}
-}
-
-bool UAchievementEntryWidget::HasRedDot()
-{
-	if (RedDot)
-	{
-		ESlateVisibility RedDotState = RedDot->GetVisibility();
-		switch (RedDotState)
-		{
-		case ESlateVisibility::Visible:
-			return true;
-		case ESlateVisibility::Hidden:
-			return false;
-		default:
-			return false;
+			if (AchieveClear)
+			{
+				if (State->UnlockedTime != FDateTime::MinValue())
+				{
+					AchieveClear->SetPercent(1.0f);
+				}
+			}
+			else if (Def->Target > 0)
+			{
+				float Percent = (float)State->Progress / (float)Def->Target;
+				AchieveClear->SetPercent(Percent);
+			}
 		}
 	}
-	return false;
 }
+
+FText UAchievementEntryWidget::GetProgressText(const FAchievementDef* Def, const  FAchievementState* State) const
+{
+	if (Def->Target > 0)
+	{
+		return FText::FromString(FString::Printf(TEXT("%d / %d"), State->Progress, Def->Target));
+	}
+	return FText::FromString(TEXT("정보없음")); 
+}
+
+FText UAchievementEntryWidget::GetStatusText(const FAchievementState* State) const
+{
+	return State->UnlockedTime != FDateTime::MinValue() ? FText::FromString(TEXT("완료")) : FText::FromString(TEXT("미완료"));
+}
+

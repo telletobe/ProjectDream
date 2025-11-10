@@ -4,10 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "../../GameSystems/Achievements/AchievementViewData.h"
 #include "AchievementListWidget.generated.h"
 
-class UAchieveViewWrapper;
+class UAchievementView;
 UCLASS()
 class PROJECTDREAM_API UAchievementListWidget : public UUserWidget
 {
@@ -18,12 +17,10 @@ public:
 private:
 	UFUNCTION()	void OnOffUI();
 	void RefreshAll();
-	bool BulidItemsAndIdMap(const TArray<FAchievementViewData>& Views, const TArray<FName>& AchieveIds, TArray<UObject*>& OutItems);
 	UFUNCTION()	void UpdateAchieveEntry(FName EventId);
 	UFUNCTION() void HandleItemClicked(UObject* Item);
-	void SyncMapToId(FName& EventId);
 private:
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<class UListView> AchieveList;
-	UPROPERTY() TMap<FName, UAchieveViewWrapper*> IdToItem;
+	UPROPERTY() TMap<FName, UAchievementView*> IdToItem;
 	bool bInitailize = false;
 };

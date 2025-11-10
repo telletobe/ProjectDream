@@ -16,7 +16,6 @@ class PROJECTDREAM_API URedDotSubSystem : public UGameInstanceSubsystem
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
-	void MarkSeen(const FName& EventId);
 private:
 
 };
