@@ -6,7 +6,13 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "RedDotSubSystem.generated.h"
 
-
+UENUM()
+enum class ERedDotType : int8
+{
+	Achievement,
+	Inventory,
+	MAX
+};
 
 UCLASS()
 class PROJECTDREAM_API URedDotSubSystem : public UGameInstanceSubsystem
@@ -16,6 +22,11 @@ class PROJECTDREAM_API URedDotSubSystem : public UGameInstanceSubsystem
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
+	bool CheckRedDotCount();
+	void OnRedDot();
+	void OffRedDot(const FName& EventId);
 private:
-
+	inline int32 ToIndex(ERedDotType RedDotType);
+private:
+	TArray<int32> RedDotCountByType;
 };

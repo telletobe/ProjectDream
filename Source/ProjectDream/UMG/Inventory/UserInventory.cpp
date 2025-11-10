@@ -128,7 +128,7 @@ void UUserInventory::UpdateInventoryUI()
 		}
 
 		UInventoryViewWrapper* Row = NewObject<UInventoryViewWrapper>(this);
-		// subSystem에서 수행 혹은 위젯 내부
+
 		Row->ViewData.ItemName = FText::FromString(Def->ItemName);
 		Row->ViewData.ItemDescription = FText::FromString(Def->ItemDescription);
 		Row->ViewData.ItemWeight = Def->GetItemWeight() * Instance.GetItemStackCnt();

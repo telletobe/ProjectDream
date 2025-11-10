@@ -31,7 +31,7 @@ void UDreamGameInventorySubsystem::Initialize(FSubsystemCollectionBase& Collecti
 				TMap<EItemCategory, FDreamGameItemDef>& CategoryMap = ItemsCatalog.FindOrAdd(ItemID);
 				if (CategoryMap.Contains(Category))
 				{
-					UE_LOG(LogTemp,Warning,TEXT("중복 정의된 데이터가 있습니다. 해당 데이터를 무시합니다."));
+					UE_LOG(LogTemp,Warning,TEXT("중복 정의된 데이터가 있습니다. 뒤에 정의된 데이터를 무시합니다."));
 					continue;
 				}
 				CategoryMap.Add(Category, Data);

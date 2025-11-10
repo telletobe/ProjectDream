@@ -3,10 +3,11 @@
 #include "UMG/Achievement/AchievementListWidget.h"
 #include "ProjectDreamCharacter.h"
 #include "GameSystems/Achievements/AchievementsSubsystem.h"
+#include "GameSystems/Achievements/AchievementView.h"
 #include "ProjectDreamPlayerController.h"
 #include "AchievementEntryWidget.h"
 #include "Components/ListView.h"
-#include "GameSystems/Achievements/AchievementView.h"
+#include "GameSystems/RedDot/RedDotSubSystem.h"
 
 void UAchievementListWidget::NativeConstruct()
 {
@@ -43,41 +44,28 @@ void UAchievementListWidget::RefreshAll()
 
 	if (bInitailize)
 	{
-		Items.Reserve(IdToItem.Num());
-
-		// IdToItem의 Value(Wrapper)들만 모아서 다시 SetListItems
-		for (auto& Elem : IdToItem)
-		{
-			if (Elem.Value)
-			{
-				Items.Add(Elem.Value);
-			}
-		}
 		AchieveList->RegenerateAllEntries();
 	}
-	else
+	
+	if (UGameInstance* GI = GetGameInstance())
 	{
-		if (UGameInstance* GI = GetGameInstance())
+		if (UAchievementsSubsystem* SubSys = GI->GetSubsystem<UAchievementsSubsystem>())
 		{
-			if (UAchievementsSubsystem* SubSys = GI->GetSubsystem<UAchievementsSubsystem>())
+			TArray<FName> AchieveIds;
+			AchieveIds = SubSys->GetAllAchievementIds();
+			
+			for (const FName& Id : AchieveIds)
 			{
-				TArray<FName> AchieveIds;
-				AchieveIds = SubSys->GetAllAchievementIds();
-				
-				for (const FName& Id : AchieveIds)
-				{
-					UAchievementView* ItemObj = NewObject<UAchievementView>(this);
-					ItemObj->AchievementID = Id;
-
-					Items.Add(ItemObj);
-				}
-
-				AchieveList->ClearListItems();
-				AchieveList->SetListItems(Items);
-				bInitailize = true;
+				UAchievementView* ItemObj = NewObject<UAchievementView>(this);
+				ItemObj->AchievementID = Id;
+				Items.Add(ItemObj);
 			}
+			AchieveList->ClearListItems();
+			AchieveList->SetListItems(Items);
+			bInitailize = true;
 		}
 	}
+	
 }
 
 void UAchievementListWidget::UpdateAchieveEntry(FName EventId)
@@ -88,22 +76,33 @@ void UAchievementListWidget::UpdateAchieveEntry(FName EventId)
 
 void UAchievementListWidget::HandleItemClicked(UObject* Item)
 {
-	UE_LOG(LogTemp,Warning,TEXT("Call HanelItemCilcked"));
-	if (UUserWidget* EntryWidget = AchieveList->GetEntryWidgetFromItem(Item))
-	{	
-		if (UAchievementEntryWidget* Entry = Cast<UAchievementEntryWidget>(EntryWidget))
-		{			
-			const FName* EventId = IdToItem.FindKey(Cast<UAchievementView>(Item));
-			if (EventId)
+	UE_LOG(LogTemp,Warning,TEXT("Call HandleItemCilcked"));
+
+	if (UAchievementView* Entry = Cast<UAchievementView>(Item))
+	{		
+		const FName& EventId = Entry->AchievementID;
+
+		if (EventId.IsValid())
+		{
+			if (UGameInstance* GI = GetGameInstance())
 			{
-				// 레드닷 로직 실행
+				if (UAchievementsSubsystem* AchieveSubSys = GI->GetSubsystem<UAchievementsSubsystem>())
+				{
+					if (AchieveSubSys->HasRedDot(EventId))
+					{
+						if (URedDotSubSystem* RedDotSubsys = GI->GetSubsystem<URedDotSubSystem>())
+						{
+							RedDotSubsys->OffRedDot(EventId);
+						}
+					}
+				}
 			}
-			else
-			{
-				return;
-			}	
 		}
-	}	
+		else
+		{
+			return;
+		}	
+	}
 }
 
 void UAchievementListWidget::OnOffUI()

@@ -54,7 +54,7 @@ void UAchievementsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	{
 		Inv->OnItemAdded.AddDynamic(this, &UAchievementsSubsystem::DispatchAchivementEvent);
 	}
-	HandleLogin();
+	HandleLoginAchievement();
 }
 
 void UAchievementsSubsystem::LoadAchievementDef(TArray<FAchievementDef>& OutDefs) const
@@ -150,7 +150,7 @@ bool UAchievementsSubsystem::HandleAchivementEvent(FName& EventId)
 	{
 		if (Result.Rule == EClearRule::Login)
 		{
-			HandleLogin();
+			HandleLoginAchievement();
 		}
 		else if (Result.Rule == EClearRule::InventoryAdded)
 		{
@@ -200,7 +200,7 @@ void UAchievementsSubsystem::UpdateProgress(const FName& EventId)
 	OnAchievementUpdated.Broadcast(EventId);
 }
 
-void UAchievementsSubsystem::HandleLogin()
+void UAchievementsSubsystem::HandleLoginAchievement()
 {
 	TArray<FAchievementDef>* AchievementDef = DefsByEventType.Find(EClearRule::Login);
 	if (!AchievementDef) return;
@@ -211,6 +211,14 @@ void UAchievementsSubsystem::HandleLogin()
 	}
 	return;
 }
+
+bool UAchievementsSubsystem::HasRedDot(const FName& EventId)
+{
+	FAchievementState* State = GetAchievementStateById(EventId);
+	if (State->UnlockedTime != FDateTime::MinValue() && State->bRewardClaimed == false) return true;
+	return false;
+}
+
 
 void UAchievementsSubsystem::HandleItemAdded(EItemCategory ItemCategory, int32 ItemID)
 {	

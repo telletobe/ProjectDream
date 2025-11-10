@@ -5,6 +5,7 @@
 #include "../GameSystems/Achievements/AchievementView.h"
 #include "../GameSystems/Achievements/AchievementsSubsystem.h"
 #include "../GameSystems/Achievements/DreamAchievements.h"
+#include "../GameSystems/RedDot/RedDotSubSystem.h"
 #include "Components/TextBlock.h"
 #include "Components/Border.h"
 #include "Components/ProgressBar.h"
@@ -25,10 +26,10 @@ void UAchievementEntryWidget::SyncFromItem(UObject* ListItemObject)
 	
 	if (UGameInstance* GI = GetGameInstance())
 	{
-		if (UAchievementsSubsystem* SubSys = GI->GetSubsystem<UAchievementsSubsystem>())
+		if (UAchievementsSubsystem* AchieveSubSys = GI->GetSubsystem<UAchievementsSubsystem>())
 		{
-			const FAchievementState* State = SubSys->GetAchievementStateById(Item->AchievementID);
-			const FAchievementDef* Def = SubSys->GetAchievementDefById(Item->AchievementID);
+			const FAchievementState* State = AchieveSubSys->GetAchievementStateById(Item->AchievementID);
+			const FAchievementDef* Def = AchieveSubSys->GetAchievementDefById(Item->AchievementID);
 
 			if (!State || !Def) return;
 
@@ -42,6 +43,13 @@ void UAchievementEntryWidget::SyncFromItem(UObject* ListItemObject)
 				if (State->UnlockedTime != FDateTime::MinValue())
 				{
 					AchieveClear->SetPercent(1.0f);
+					if (State->bRewardClaimed == false)
+					{
+						if (URedDotSubSystem* RedDotSubSys = GI->GetSubsystem<URedDotSubSystem>())
+						{
+							RedDotSubSys->OnRedDot();
+						}
+					}
 				}
 			}
 			else if (Def->Target > 0)

@@ -19,8 +19,10 @@ private:
 	void RefreshAll();
 	UFUNCTION()	void UpdateAchieveEntry(FName EventId);
 	UFUNCTION() void HandleItemClicked(UObject* Item);
+	bool HasRedDot();
 private:
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<class UListView> AchieveList;
-	UPROPERTY() TMap<FName, UAchievementView*> IdToItem;
+	UPROPERTY() TMap<FName, UAchievementView*> IdData;
 	bool bInitailize = false;
+
 };
