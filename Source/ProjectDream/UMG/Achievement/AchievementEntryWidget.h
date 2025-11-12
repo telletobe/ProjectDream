@@ -15,6 +15,7 @@
 class UTextBlock;
 class UProgressBar;
 class UBorder;
+class URedDotWidget;
 
 UCLASS()
 class PROJECTDREAM_API UAchievementEntryWidget : public UUserWidget, public IUserObjectListEntry
@@ -23,9 +24,12 @@ class PROJECTDREAM_API UAchievementEntryWidget : public UUserWidget, public IUse
 	
 public:
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
+	virtual void NativeOnEntryReleased() override;
 	void SyncFromItem(UObject* ListItemObject);
 	FText GetProgressText(const FAchievementDef* Def,const FAchievementState* State) const;
 	FText GetStatusText(const FAchievementState* State) const;
+	bool HasRedDot() const;
+	void OffRedDot() const;
 private:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UTextBlock> TextTitle;
@@ -41,4 +45,7 @@ private:
 	
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UProgressBar> AchieveClear;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<URedDotWidget> WBP_RedDotWidget;
 };

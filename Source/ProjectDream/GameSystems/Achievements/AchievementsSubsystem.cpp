@@ -3,6 +3,7 @@
 
 #include "GameSystems/Achievements/AchievementsSubsystem.h"
 #include "DreamAchievements.h"
+#include "GameSystems/RedDot/RedDotSubSystem.h"
 #include <Kismet/GameplayStatics.h>
 #include "../Save/JsonSaveGame.h"
 #include <GameSystems/Save/DreamSaveGame.h>
@@ -164,12 +165,22 @@ bool UAchievementsSubsystem::HandleAchivementEvent(FName& EventId)
 	return false;
 }
 
+
+// 레드닷 갯수를 증가시키기 위한 로직 적용중..
 void UAchievementsSubsystem::UpdateState(FAchievementState& OutStateData, const FAchievementDef& OutDef)
 {
+	URedDotSubSystem* RedDotSubSys = nullptr;
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		RedDotSubSys = GI->GetSubsystem<URedDotSubSystem>();
+	}
+
 	if (OutDef.AchieveType == EAchievementType::Instant)
 	{
-		OutStateData.Progress++;
+		OutStateData.Progress++;	
 		OutStateData.UnlockedTime = FDateTime::UtcNow();
+		if (!RedDotSubSys) return;
+		RedDotSubSys->IncrementRedDot();
 	}
 	else
 	{
@@ -177,9 +188,13 @@ void UAchievementsSubsystem::UpdateState(FAchievementState& OutStateData, const 
 		if (OutDef.Target <= OutStateData.Progress)
 		{
 			OutStateData.UnlockedTime = FDateTime::UtcNow();
+			if (!RedDotSubSys) return;
+			RedDotSubSys->IncrementRedDot();
 		}
 	}
 	RequestSave(States);
+
+
 }
 
 void UAchievementsSubsystem::UpdateProgress(const FName& EventId)
@@ -212,14 +227,6 @@ void UAchievementsSubsystem::HandleLoginAchievement()
 	return;
 }
 
-bool UAchievementsSubsystem::HasRedDot(const FName& EventId)
-{
-	FAchievementState* State = GetAchievementStateById(EventId);
-	if (State->UnlockedTime != FDateTime::MinValue() && State->bRewardClaimed == false) return true;
-	return false;
-}
-
-
 void UAchievementsSubsystem::HandleItemAdded(EItemCategory ItemCategory, int32 ItemID)
 {	
 	TArray<FAchievementDef>* AchievementDef = DefsByEventType.Find(EClearRule::InventoryAdded);
@@ -243,6 +250,13 @@ void UAchievementsSubsystem::DispatchAchivementEvent(EItemCategory ItemCategory,
 {
 	FName ResultID(*FString::Printf(TEXT("ItemAdded_%s_%d"), AchievementIDParse::ToString(ItemCategory), ItemID));
 	HandleAchivementEvent(ResultID);
+}
+
+void UAchievementsSubsystem::ClaimReward(const FName& EventId)
+{
+	FAchievementState* State = GetAchievementStateById(EventId);
+	State->bRewardClaimed = true;
+	RequestSave(GetAllAchievementState());
 }
 
 void UAchievementsSubsystem::SaveNow(const TMap<FName, FAchievementState>& InStates)

@@ -1,9 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "GameSystems/RedDot/RedDotSubSystem.h"
-#include "RedDotState.h"
 #include "GameSystems/Achievements/AchievementsSubsystem.h"
+
 
 
 void URedDotSubSystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -29,27 +29,23 @@ bool URedDotSubSystem::CheckRedDotCount()
 	}
 }
 
-void URedDotSubSystem::OnRedDot()
+void URedDotSubSystem::IncrementRedDot()
 {
 	RedDotCountByType[ToIndex(ERedDotType::Achievement)]++;
-	UE_LOG(LogTemp,Warning,TEXT("Call OnRedDot"));
+	UE_LOG(LogTemp,Warning,TEXT("RedDot 갯수 : %d"), RedDotCountByType[ToIndex(ERedDotType::Achievement)]);
 }
 
-void URedDotSubSystem::OffRedDot(const FName& EventId)
+void URedDotSubSystem::ClearAchievementRedDot(const FName& EventId)
 {
 	if (UGameInstance* GI = GetGameInstance())
 	{
 		if (UAchievementsSubsystem* AchieveSubSys = GI->GetSubsystem<UAchievementsSubsystem>())
 		{
-			FAchievementState* State = AchieveSubSys->GetAchievementStateById(EventId);
-			State->bRewardClaimed = true;
-			RedDotCountByType[ToIndex(ERedDotType::Achievement)]--;
-
-			AchieveSubSys->RequestSave(AchieveSubSys->GetAllAchievementState());
+			AchieveSubSys->ClaimReward(EventId);
 		}
 	}
-
-	UE_LOG(LogTemp, Warning, TEXT("Call OffRedDot"));
+	RedDotCountByType[ToIndex(ERedDotType::Achievement)]--;
+	UE_LOG(LogTemp, Warning, TEXT("RedDot 갯수 : %d"), RedDotCountByType[ToIndex(ERedDotType::Achievement)]);
 }
 
 inline int32 URedDotSubSystem::ToIndex(ERedDotType RedDotType)

@@ -6,6 +6,7 @@
 #include "../GameSystems/Achievements/AchievementsSubsystem.h"
 #include "../GameSystems/Achievements/DreamAchievements.h"
 #include "../GameSystems/RedDot/RedDotSubSystem.h"
+#include "UMG/RedDot/RedDotWidget.h"
 #include "Components/TextBlock.h"
 #include "Components/Border.h"
 #include "Components/ProgressBar.h"
@@ -17,13 +18,25 @@ void UAchievementEntryWidget::NativeOnListItemObjectSet(UObject* ListItemObject)
 	SyncFromItem(ListItemObject);
 }
 
+void UAchievementEntryWidget::NativeOnEntryReleased()
+{
+	if (TextTitle)      TextTitle->SetText(FText::GetEmpty());
+	if (DescText)       DescText->SetText(FText::GetEmpty());
+	if (ProgressText)   ProgressText->SetText(FText::GetEmpty());
+	if (StatusText)     StatusText->SetText(FText::GetEmpty());
+
+	if (AchieveClear)   AchieveClear->SetPercent(0.f);
+
+	if (WBP_RedDotWidget) WBP_RedDotWidget->OffRedDot();
+}
+
 void UAchievementEntryWidget::SyncFromItem(UObject* ListItemObject)
 {
 	if (!ListItemObject) return;
 
 	UAchievementView* Item = Cast< UAchievementView>(ListItemObject);
 	if (!Item) return;
-	
+
 	if (UGameInstance* GI = GetGameInstance())
 	{
 		if (UAchievementsSubsystem* AchieveSubSys = GI->GetSubsystem<UAchievementsSubsystem>())
@@ -45,19 +58,33 @@ void UAchievementEntryWidget::SyncFromItem(UObject* ListItemObject)
 					AchieveClear->SetPercent(1.0f);
 					if (State->bRewardClaimed == false)
 					{
-						if (URedDotSubSystem* RedDotSubSys = GI->GetSubsystem<URedDotSubSystem>())
+						if (WBP_RedDotWidget)
 						{
-							RedDotSubSys->OnRedDot();
+							WBP_RedDotWidget->OnRedDot();
 						}
 					}
 				}
+				else if (Def->Target > 0)
+				{
+					float Percent = (float)State->Progress / (float)Def->Target;
+					AchieveClear->SetPercent(Percent);
+				}
 			}
-			else if (Def->Target > 0)
-			{
-				float Percent = (float)State->Progress / (float)Def->Target;
-				AchieveClear->SetPercent(Percent);
-			}
+			
 		}
+	}
+}
+
+bool UAchievementEntryWidget::HasRedDot() const
+{
+	return WBP_RedDotWidget->HasRedDot();
+}
+
+void UAchievementEntryWidget::OffRedDot() const
+{
+	if (WBP_RedDotWidget)
+	{
+		WBP_RedDotWidget->OffRedDot();
 	}
 }
 

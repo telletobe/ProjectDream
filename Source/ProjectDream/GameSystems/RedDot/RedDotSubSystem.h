@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "../Achievements/DreamAchievements.h"
 #include "RedDotSubSystem.generated.h"
 
 UENUM()
@@ -23,8 +24,8 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 	bool CheckRedDotCount();
-	void OnRedDot();
-	void OffRedDot(const FName& EventId);
+	void IncrementRedDot();
+	void ClearAchievementRedDot(const FName& EventId);
 private:
 	inline int32 ToIndex(ERedDotType RedDotType);
 private:

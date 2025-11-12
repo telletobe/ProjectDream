@@ -30,7 +30,7 @@ public:
 	const TMap<FName, FAchievementState>& GetAllAchievementState() const;
 	const TArray<FName>& GetAllAchievementIds() const { return AchievementIds; }
 	UFUNCTION()	void DispatchAchivementEvent(EItemCategory ItemCategory, int32 ItemID);
-	bool HasRedDot(const FName& EventId);
+	void ClaimReward(const FName& EventId);
 public:
 	void RequestSave(const TMap<FName,FAchievementState>& StateData);
 private:

@@ -78,22 +78,26 @@ void UAchievementListWidget::HandleItemClicked(UObject* Item)
 {
 	UE_LOG(LogTemp,Warning,TEXT("Call HandleItemCilcked"));
 
-	if (UAchievementView* Entry = Cast<UAchievementView>(Item))
+	if (UAchievementView* View = Cast<UAchievementView>(Item))
 	{		
-		const FName& EventId = Entry->AchievementID;
+		const FName& EventId = View->AchievementID;
 
 		if (EventId.IsValid())
 		{
-			if (UGameInstance* GI = GetGameInstance())
+			if (UUserWidget* EntryWidget = AchieveList->GetEntryWidgetFromItem(Item))
 			{
-				if (UAchievementsSubsystem* AchieveSubSys = GI->GetSubsystem<UAchievementsSubsystem>())
+				if (UAchievementEntryWidget* Entry = Cast<UAchievementEntryWidget>(EntryWidget))
 				{
-					if (AchieveSubSys->HasRedDot(EventId))
+					if (Entry->HasRedDot())
 					{
-						if (URedDotSubSystem* RedDotSubsys = GI->GetSubsystem<URedDotSubSystem>())
+						if (UGameInstance* GI = GetGameInstance())
 						{
-							RedDotSubsys->OffRedDot(EventId);
+							if (URedDotSubSystem* RedDotSubSys = GI->GetSubsystem<URedDotSubSystem>())
+							{
+								RedDotSubSys->ClearAchievementRedDot(EventId);
+							}
 						}
+						Entry->OffRedDot();
 					}
 				}
 			}
@@ -114,14 +118,8 @@ void UAchievementListWidget::OnOffUI()
 	case ESlateVisibility::Visible:
 		SetVisibility(ESlateVisibility::Hidden);
 		break;
-	case ESlateVisibility::Collapsed:
-		break;
 	case ESlateVisibility::Hidden:
 		SetVisibility(ESlateVisibility::Visible);
-		break;
-	case ESlateVisibility::HitTestInvisible:
-		break;
-	case ESlateVisibility::SelfHitTestInvisible:
 		break;
 	default:
 		break;
