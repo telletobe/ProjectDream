@@ -9,7 +9,27 @@
 void URedDotSubSystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
+	Collection.InitializeDependency<UAchievementsSubsystem>();
+
 	RedDotCountByType.SetNum(ToIndex(ERedDotType::MAX));
+
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		if (UAchievementsSubsystem* AchieveSubSys = GI->GetSubsystem<UAchievementsSubsystem>())
+		{
+			TMap<FName,FAchievementState> AchieveState = AchieveSubSys->GetAllAchievementState();
+			TArray<FAchievementState> AchieveStateArr;
+			AchieveState.GenerateValueArray(AchieveStateArr);
+
+			for (int32 i = 0; i < AchieveStateArr.Num(); i++)
+			{
+				if (AchieveStateArr[i].UnlockedTime != FDateTime::MinValue() && AchieveStateArr[i].bRewardClaimed == false)
+				{
+					IncrementRedDot(ERedDotType::Achievement);
+				}
+			}
+		}
+	}
 }
 
 void URedDotSubSystem::Deinitialize()
@@ -29,10 +49,10 @@ bool URedDotSubSystem::CheckRedDotCount()
 	}
 }
 
-void URedDotSubSystem::IncrementRedDot()
+void URedDotSubSystem::IncrementRedDot(ERedDotType RedDotType)
 {
-	RedDotCountByType[ToIndex(ERedDotType::Achievement)]++;
-	UE_LOG(LogTemp,Warning,TEXT("RedDot 갯수 : %d"), RedDotCountByType[ToIndex(ERedDotType::Achievement)]);
+	RedDotCountByType[ToIndex(RedDotType)]++;
+	UE_LOG(LogTemp,Warning,TEXT("RedDot 갯수 : %d"), RedDotCountByType[ToIndex(RedDotType)]);
 }
 
 void URedDotSubSystem::ClearAchievementRedDot(const FName& EventId)
@@ -45,6 +65,10 @@ void URedDotSubSystem::ClearAchievementRedDot(const FName& EventId)
 		}
 	}
 	RedDotCountByType[ToIndex(ERedDotType::Achievement)]--;
+	if (RedDotCountByType[ToIndex(ERedDotType::Achievement)] <= 0)
+	{
+		RedDotCountByType[ToIndex(ERedDotType::Achievement)] = 0;
+	}
 	UE_LOG(LogTemp, Warning, TEXT("RedDot 갯수 : %d"), RedDotCountByType[ToIndex(ERedDotType::Achievement)]);
 }
 

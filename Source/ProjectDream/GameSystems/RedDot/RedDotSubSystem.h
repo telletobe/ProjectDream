@@ -24,7 +24,7 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 	bool CheckRedDotCount();
-	void IncrementRedDot();
+	void IncrementRedDot(ERedDotType RedDotType);
 	void ClearAchievementRedDot(const FName& EventId);
 private:
 	inline int32 ToIndex(ERedDotType RedDotType);

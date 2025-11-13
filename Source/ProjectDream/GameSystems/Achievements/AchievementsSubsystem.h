@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "DreamAchievements.h"
-#include "../RedDot/RedDotState.h"
 #include "../Inventory/DreamItemDTO.h"
 #include "AchievementsSubsystem.generated.h"
 
