@@ -260,7 +260,15 @@ void UAchievementsSubsystem::ClaimReward(const FName& EventId)
 	if (State->UnlockedTime != FDateTime::MinValue() && State->bRewardClaimed == false)
 	{
 		State->bRewardClaimed = true;
+		if (UGameInstance* GI = GetGameInstance())
+		{
+			if (URedDotSubSystem* RedDotSubSystem = GI->GetSubsystem<URedDotSubSystem>())
+			{
+				RedDotSubSystem->ClearAchievementRedDot(EventId);
+			}
+		}
 	}
+
 	RequestSave(GetAllAchievementState());
 	
 }

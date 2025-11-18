@@ -21,7 +21,8 @@ void UHambergerMenuWidget::NativeConstruct()
 		{
 			if (URedDotSubSystem* RedDotSubSys = GI->GetSubsystem<URedDotSubSystem>())
 			{
-				if (RedDotSubSys->IsTickable())
+				RedDotSubSys->OnRedDotTickableStateChanged.AddUniqueDynamic(this,&UHambergerMenuWidget::OnOffRedDot);
+				if (RedDotSubSys->HasAnyRedDot())
 				{
 					WBP_RedDot->OnRedDot();
 				}
@@ -29,9 +30,31 @@ void UHambergerMenuWidget::NativeConstruct()
 				{
 					WBP_RedDot->OffRedDot();
 				}
-				
 			}
 		}
+	}
+}
+
+void UHambergerMenuWidget::NativeTick(const FGeometry& Geo, float InDeltaTime)
+{
+	Super::NativeTick(Geo,InDeltaTime);
+	UE_LOG(LogTemp,Warning,TEXT("Call NativeTick"));
+	if (!WBP_RedDot) return;
+
+	UGameInstance* GI = GetGameInstance();
+	if (!GI) return;
+
+	URedDotSubSystem* RedDotSubSys = GI->GetSubsystem<URedDotSubSystem>();
+	if (!RedDotSubSys) return;
+	
+	const bool bHasRedDot = RedDotSubSys->HasAnyRedDot();
+	if (bHasRedDot)
+	{
+		WBP_RedDot->OnRedDot();
+	}
+	else
+	{
+		WBP_RedDot->OffRedDot();
 	}
 }
 
@@ -41,6 +64,18 @@ void UHambergerMenuWidget::OnOffAchievementWidget()
 	{
 		WBP_AchievementListWidget->OnOffUI();
 	}
+}
+
+void UHambergerMenuWidget::OnOffRedDot(bool HasRedDot)
+{
+	if (!WBP_RedDot) return;
+
+	if (HasRedDot)
+	{
+		WBP_RedDot->OnRedDot();
+	}
+
+	WBP_RedDot->OffRedDot();
 }
 
 void UHambergerMenuWidget::InitHambergerMenu(UUserWidget* InWidget)

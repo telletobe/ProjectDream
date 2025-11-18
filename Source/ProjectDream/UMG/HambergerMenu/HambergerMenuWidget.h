@@ -17,7 +17,9 @@ class PROJECTDREAM_API UHambergerMenuWidget : public UUserWidget
 	
 public:
 	virtual void NativeConstruct() override;
+	virtual void NativeTick(const FGeometry& Geo, float InDeltaTime) override;
 	UFUNCTION() void OnOffAchievementWidget();
+	UFUNCTION() void OnOffRedDot(bool HasRedDot);
 	void InitHambergerMenu(UUserWidget* InWidget);
 private:
 

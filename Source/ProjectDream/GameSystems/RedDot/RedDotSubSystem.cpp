@@ -4,11 +4,6 @@
 #include "GameSystems/RedDot/RedDotSubSystem.h"
 #include "GameSystems/Achievements/AchievementsSubsystem.h"
 
-//레드닷 UI에서 서브시스템을 조회하여 UI갱신
-/*
-서브시스템에서 업적의 상태를 Tick으로 확인하여 레드닷의 유무 파악
--> 유무 파악 후 ui로 전파
-*/
 void URedDotSubSystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
@@ -39,15 +34,16 @@ void URedDotSubSystem::Deinitialize()
 	Super::Deinitialize();
 }
 
-void URedDotSubSystem::Tick(float DeltaTime)
+bool URedDotSubSystem::HasAnyRedDot()
 {
-	
-}
-
-int32 URedDotSubSystem::CheckAchievementRedDotCount()
-{
-	return RedDotCountByType[ToIndex(ERedDotType::Achievement)];
-
+	for (int32 Count : RedDotCountByType)
+	{
+		if (Count > 0)
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 void URedDotSubSystem::IncrementRedDot(ERedDotType RedDotType)
@@ -58,10 +54,6 @@ void URedDotSubSystem::IncrementRedDot(ERedDotType RedDotType)
 
 void URedDotSubSystem::ClearAchievementRedDot(const FName& EventId)
 {
-	if (!AchieveSubSys)
-	{
-		AchieveSubSys->ClaimReward(EventId);
-	}
 	RedDotCountByType[ToIndex(ERedDotType::Achievement)]--;
 	if (RedDotCountByType[ToIndex(ERedDotType::Achievement)] <= 0)
 	{
@@ -70,18 +62,15 @@ void URedDotSubSystem::ClearAchievementRedDot(const FName& EventId)
 	UE_LOG(LogTemp, Warning, TEXT("RedDot 갯수 : %d"), RedDotCountByType[ToIndex(ERedDotType::Achievement)]);
 }
 
-bool URedDotSubSystem::IsTickable() const
-{
-	for (int32 Count : RedDotCountByType)
-	{
-		if (Count > 0) return true;
-	}
-
-	return false;
-}
-
 inline int32 URedDotSubSystem::ToIndex(ERedDotType RedDotType)
 {
 	return static_cast<int32>(RedDotType);
+}
+
+bool URedDotSubSystem::IsGamePlaying() const
+{
+	const UWorld* World = GetWorld();
+	return World && World->IsGameWorld();
+	
 }
 
