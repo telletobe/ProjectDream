@@ -34,7 +34,7 @@ void UAchievementEntryWidget::SyncFromItem(UObject* ListItemObject)
 {
 	if (!ListItemObject) return;
 
-	UAchievementView* Item = Cast< UAchievementView>(ListItemObject);
+	UAchievementView* Item = Cast<UAchievementView>(ListItemObject);
 	if (!Item) return;
 
 	if (UGameInstance* GI = GetGameInstance())
@@ -56,11 +56,20 @@ void UAchievementEntryWidget::SyncFromItem(UObject* ListItemObject)
 				if (State->UnlockedTime != FDateTime::MinValue())
 				{
 					AchieveClear->SetPercent(1.0f);
+
 					if (State->bRewardClaimed == false)
 					{
 						if (WBP_RedDotWidget)
 						{
 							WBP_RedDotWidget->OnRedDot();
+						}
+					}
+					else
+					{
+						if (WBP_RedDotWidget)
+						{
+							ESlateVisibility Visible = WBP_RedDotWidget->GetVisibility();
+							if (Visible == ESlateVisibility::Visible) WBP_RedDotWidget->OffRedDot();
 						}
 					}
 				}
@@ -70,7 +79,6 @@ void UAchievementEntryWidget::SyncFromItem(UObject* ListItemObject)
 					AchieveClear->SetPercent(Percent);
 				}
 			}
-			
 		}
 	}
 }

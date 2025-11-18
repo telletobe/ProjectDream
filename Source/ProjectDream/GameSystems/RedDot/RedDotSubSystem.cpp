@@ -4,8 +4,11 @@
 #include "GameSystems/RedDot/RedDotSubSystem.h"
 #include "GameSystems/Achievements/AchievementsSubsystem.h"
 
-
-
+//레드닷 UI에서 서브시스템을 조회하여 UI갱신
+/*
+서브시스템에서 업적의 상태를 Tick으로 확인하여 레드닷의 유무 파악
+-> 유무 파악 후 ui로 전파
+*/
 void URedDotSubSystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
@@ -15,15 +18,14 @@ void URedDotSubSystem::Initialize(FSubsystemCollectionBase& Collection)
 
 	if (UGameInstance* GI = GetGameInstance())
 	{
-		if (UAchievementsSubsystem* AchieveSubSys = GI->GetSubsystem<UAchievementsSubsystem>())
+		if (AchieveSubSys = GI->GetSubsystem<UAchievementsSubsystem>())
 		{
-			TMap<FName,FAchievementState> AchieveState = AchieveSubSys->GetAllAchievementState();
-			TArray<FAchievementState> AchieveStateArr;
-			AchieveState.GenerateValueArray(AchieveStateArr);
-
-			for (int32 i = 0; i < AchieveStateArr.Num(); i++)
+			const TMap<FName,FAchievementState>& AchieveStateMap = AchieveSubSys->GetAllAchievementState();
+			
+			for (const auto& KVP : AchieveStateMap)
 			{
-				if (AchieveStateArr[i].UnlockedTime != FDateTime::MinValue() && AchieveStateArr[i].bRewardClaimed == false)
+				const FAchievementState& State = KVP.Value;
+				if (State.UnlockedTime != FDateTime::MinValue() && State.bRewardClaimed == false)
 				{
 					IncrementRedDot(ERedDotType::Achievement);
 				}
@@ -37,32 +39,28 @@ void URedDotSubSystem::Deinitialize()
 	Super::Deinitialize();
 }
 
-bool URedDotSubSystem::CheckRedDotCount()
+void URedDotSubSystem::Tick(float DeltaTime)
 {
-	if (RedDotCountByType[ToIndex(ERedDotType::Achievement)] != 0)
-	{
-		return false;
-	}
-	else
-	{
-		return true;
-	}
+	
+}
+
+int32 URedDotSubSystem::CheckAchievementRedDotCount()
+{
+	return RedDotCountByType[ToIndex(ERedDotType::Achievement)];
+
 }
 
 void URedDotSubSystem::IncrementRedDot(ERedDotType RedDotType)
 {
 	RedDotCountByType[ToIndex(RedDotType)]++;
-	UE_LOG(LogTemp,Warning,TEXT("RedDot 갯수 : %d"), RedDotCountByType[ToIndex(RedDotType)]);
+	UE_LOG(LogTemp, Warning, TEXT("RedDot 갯수 : %d"), RedDotCountByType[ToIndex(ERedDotType::Achievement)]);
 }
 
 void URedDotSubSystem::ClearAchievementRedDot(const FName& EventId)
 {
-	if (UGameInstance* GI = GetGameInstance())
+	if (!AchieveSubSys)
 	{
-		if (UAchievementsSubsystem* AchieveSubSys = GI->GetSubsystem<UAchievementsSubsystem>())
-		{
-			AchieveSubSys->ClaimReward(EventId);
-		}
+		AchieveSubSys->ClaimReward(EventId);
 	}
 	RedDotCountByType[ToIndex(ERedDotType::Achievement)]--;
 	if (RedDotCountByType[ToIndex(ERedDotType::Achievement)] <= 0)
@@ -70,6 +68,16 @@ void URedDotSubSystem::ClearAchievementRedDot(const FName& EventId)
 		RedDotCountByType[ToIndex(ERedDotType::Achievement)] = 0;
 	}
 	UE_LOG(LogTemp, Warning, TEXT("RedDot 갯수 : %d"), RedDotCountByType[ToIndex(ERedDotType::Achievement)]);
+}
+
+bool URedDotSubSystem::IsTickable() const
+{
+	for (int32 Count : RedDotCountByType)
+	{
+		if (Count > 0) return true;
+	}
+
+	return false;
 }
 
 inline int32 URedDotSubSystem::ToIndex(ERedDotType RedDotType)

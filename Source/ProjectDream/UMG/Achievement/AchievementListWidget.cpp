@@ -84,21 +84,11 @@ void UAchievementListWidget::HandleItemClicked(UObject* Item)
 
 		if (EventId.IsValid())
 		{
-			if (UUserWidget* EntryWidget = AchieveList->GetEntryWidgetFromItem(Item))
+			if (UGameInstance* GI = GetGameInstance())
 			{
-				if (UAchievementEntryWidget* Entry = Cast<UAchievementEntryWidget>(EntryWidget))
+				if (UAchievementsSubsystem* AchieveSubSys = GI->GetSubsystem<UAchievementsSubsystem>())
 				{
-					if (Entry->HasRedDot())
-					{
-						if (UGameInstance* GI = GetGameInstance())
-						{
-							if (URedDotSubSystem* RedDotSubSys = GI->GetSubsystem<URedDotSubSystem>())
-							{
-								RedDotSubSys->ClearAchievementRedDot(EventId);
-							}
-						}
-						Entry->OffRedDot();
-					}
+					AchieveSubSys->ClaimReward(EventId);
 				}
 			}
 		}
@@ -107,6 +97,19 @@ void UAchievementListWidget::HandleItemClicked(UObject* Item)
 			return;
 		}	
 	}
+
+	if (AchieveList)
+	{
+		if (UUserWidget* EntryWidget = AchieveList->GetEntryWidgetFromItem(Item))
+		{
+			if (auto* Entry = Cast<UAchievementEntryWidget>(EntryWidget))
+			{
+				Entry->SyncFromItem(Item);   
+				AchieveList->RegenerateAllEntries();
+			}
+		}
+	}
+
 }
 
 void UAchievementListWidget::OnOffUI()

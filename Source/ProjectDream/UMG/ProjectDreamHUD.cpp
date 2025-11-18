@@ -3,6 +3,7 @@
 
 #include "UMG/ProjectDreamHUD.h"
 #include "UMG/Inventory/UserInventory.h"
+#include "UMG/HambergerMenu/HambergerMenuWidget.h"
 #include "UMG/Achievement/AchievementListWidget.h"
 DEFINE_LOG_CATEGORY(LogHUD);
 
@@ -21,12 +22,37 @@ void AProjectDreamHUD::BeginPlay()
 
 	if (!PC) return;
 
+	UHambergerMenuWidget* HamWidget = nullptr;
+	UAchievementListWidget* AchievementListWidget = nullptr;
+
 	for (const TSubclassOf<UUserWidget>& WidgetClass : Widgets)
 	{
 		if (!WidgetClass) continue;
 		UUserWidget* NewWidget = CreateWidget<UUserWidget>(PC,WidgetClass);		
-		NewWidget->AddToViewport();
-		NewWidget->SetVisibility(ESlateVisibility::Hidden);
+
+		if (auto* Ach = Cast<UAchievementListWidget>(NewWidget))
+		{
+			AchievementListWidget = Ach;
+		}
+		else if (auto* Ham = Cast<UHambergerMenuWidget>(NewWidget))
+		{
+			HamWidget = Ham;
+		}
+
+		if (NewWidget->IsA(UHambergerMenuWidget::StaticClass()))
+		{
+			NewWidget->AddToViewport();
+		}
+		else
+		{
+			NewWidget->AddToViewport();
+			NewWidget->SetVisibility(ESlateVisibility::Hidden);
+		}
+
+	}	
+
+	if (HamWidget && AchievementListWidget)
+	{
+		HamWidget->InitHambergerMenu(AchievementListWidget);
 	}
-	
 }

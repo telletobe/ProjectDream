@@ -49,7 +49,6 @@ struct FAchievementState
 	UPROPERTY(SaveGame) int32 Progress = 0;
 	UPROPERTY(SaveGame) FDateTime UnlockedTime = FDateTime::MinValue();
 	UPROPERTY(SaveGame) bool bRewardClaimed = false;
-
 };
 
 UCLASS()

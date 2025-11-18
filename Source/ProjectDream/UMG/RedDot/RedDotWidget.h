@@ -21,6 +21,4 @@ public:
 	bool HasRedDot();
 private:
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<class UBorder> RedDot;
-	
-	
 };

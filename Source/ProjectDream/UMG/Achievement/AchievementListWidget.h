@@ -14,8 +14,8 @@ class PROJECTDREAM_API UAchievementListWidget : public UUserWidget
 	
 public:
 	virtual void NativeConstruct() override;
-private:
 	UFUNCTION()	void OnOffUI();
+private:
 	void RefreshAll();
 	UFUNCTION()	void UpdateAchieveEntry(FName EventId);
 	UFUNCTION() void HandleItemClicked(UObject* Item);

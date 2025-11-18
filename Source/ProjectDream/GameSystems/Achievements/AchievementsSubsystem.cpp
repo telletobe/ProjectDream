@@ -257,8 +257,12 @@ void UAchievementsSubsystem::DispatchAchivementEvent(EItemCategory ItemCategory,
 void UAchievementsSubsystem::ClaimReward(const FName& EventId)
 {
 	FAchievementState* State = GetAchievementStateById(EventId);
-	State->bRewardClaimed = true;
+	if (State->UnlockedTime != FDateTime::MinValue() && State->bRewardClaimed == false)
+	{
+		State->bRewardClaimed = true;
+	}
 	RequestSave(GetAllAchievementState());
+	
 }
 
 void UAchievementsSubsystem::SaveNow(const TMap<FName, FAchievementState>& InStates)
